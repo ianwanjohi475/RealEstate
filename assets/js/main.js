@@ -88,6 +88,7 @@
             ${user
               ? `<a class="btn btn--block" href="dashboard.html">${I("dashboard")}My dashboard</a>`
               : `<button class="btn btn--block" data-open-auth="login">${I("user")}Login</button><button class="btn btn--gold btn--block" data-open-auth="register">${I("sparkles")}Create account</button>`}
+            <button class="btn btn--ghost btn--block" data-install-app>${I("download")}Install app</button>
           </div>
         </div>
       </div>`;
@@ -132,7 +133,7 @@
             <a href="properties.html?type=Land">Land &amp; plots</a><a href="agents.html">Our agents</a><a href="about.html">TrustScore</a></div>
           <div class="footer-col"><h5>Company</h5>
             <a href="about.html">About us</a><a href="about.html#story">Our story</a>
-            <a href="contact.html">Contact</a><a href="dashboard.html">Dashboard</a><a href="#" data-open-auth="login">Login</a></div>
+            <a href="contact.html">Contact</a><a href="dashboard.html">Dashboard</a><a href="#" data-install-app>Install app</a></div>
           <div class="footer-col"><h5>Get in touch</h5>
             <ul class="footer-contact">
               <li>${I("pin")}<span>ABC Place, Waiyaki Way,<br>Westlands, Nairobi</span></li>
@@ -611,16 +612,47 @@
     });
   }
 
-  /* ---------- PWA ---------- */
+  /* ---------- PWA install ---------- */
+  let deferredInstall = null;
+  const isStandalone = () => window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true;
+  const isIOS = () => /iphone|ipad|ipod/i.test(navigator.userAgent);
+
+  async function doInstall() {
+    if (isStandalone()) { toast("Esto is already installed on this device.", "checkCircle"); return; }
+    if (deferredInstall) {
+      deferredInstall.prompt();
+      const { outcome } = await deferredInstall.userChoice;
+      deferredInstall = null;
+      const b = $("#install-banner"); if (b) b.classList.remove("show");
+      if (outcome === "accepted") toast("Installing Esto…", "download");
+      return;
+    }
+    // No automatic prompt available → tell the user how
+    if (isIOS()) toast("On iPhone: tap Share, then 'Add to Home Screen'.", "download");
+    else toast("Open your browser menu (⋮) and choose 'Install app' / 'Add to Home screen'.", "download");
+  }
+  window.EstoInstall = doInstall;
+
   function initPWA() {
     if ("serviceWorker" in navigator) window.addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => {}));
-    let deferred = null; const banner = $("#install-banner");
-    window.addEventListener("beforeinstallprompt", (e) => { e.preventDefault(); deferred = e; if (banner && !sessionStorage.getItem("esto:install-dismissed")) banner.classList.add("show"); });
+
+    // wire every install affordance (footer, drawer, banner)
+    const wire = () => $$("[data-install-app],[data-install]").forEach((b) => { if (b.dataset.bound) return; b.dataset.bound = "1"; b.addEventListener("click", (e) => { e.preventDefault(); doInstall(); }); });
+    wire();
+
+    const banner = $("#install-banner");
+    window.addEventListener("beforeinstallprompt", (e) => {
+      e.preventDefault(); deferredInstall = e;
+      document.body.classList.add("can-install");
+      if (banner && !sessionStorage.getItem("esto:install-dismissed") && !isStandalone()) banner.classList.add("show");
+    });
+    window.addEventListener("appinstalled", () => { deferredInstall = null; document.body.classList.remove("can-install"); if (banner) banner.classList.remove("show"); toast("Esto installed. Find it on your home screen.", "checkCircle"); });
     if (banner) {
-      const inst = $("[data-install]", banner), dis = $("[data-dismiss]", banner);
-      if (inst) inst.addEventListener("click", async () => { banner.classList.remove("show"); if (deferred) { deferred.prompt(); await deferred.userChoice; deferred = null; } });
+      const dis = $("[data-dismiss]", banner);
       if (dis) dis.addEventListener("click", () => { banner.classList.remove("show"); sessionStorage.setItem("esto:install-dismissed", "1"); });
     }
+    // re-wire after header/footer inject
+    setTimeout(wire, 300);
   }
 
   /* ---------- Boot ---------- */
