@@ -3,172 +3,137 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Nyumba — Verified Homes in Nairobi | Buy, Rent & Invest with Confidence</title>
-  <meta name="description" content="Nyumba is Nairobi's verified-listings real estate agency. Every home is physically inspected and title-checked. Buy, rent or invest with zero ghost listings and transparent pricing.">
-  <meta name="theme-color" content="#0E3B32">
+  <title>Esto — Real Estate, Made Certain | Verified Homes in Nairobi</title>
+  <meta name="description" content="Esto is Nairobi's trust-first property platform. Every listing carries a data-driven TrustScore — title, inspection, price fairness and agent record verified before you view. Buy, rent and invest with certainty.">
+  <meta name="theme-color" content="#8B1E3F">
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="assets/icons/favicon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="assets/icons/icon-192.png">
-  <meta property="og:title" content="Nyumba — Verified Homes in Nairobi">
-  <meta property="og:description" content="Nairobi's verified-listings agency. What you see is exactly what you buy.">
+  <meta property="og:title" content="Esto — Real Estate, Made Certain">
+  <meta property="og:description" content="Nairobi's trust-first property platform. Every home carries an Esto TrustScore.">
   <meta property="og:type" content="website">
+  <script>(function(){try{var t=localStorage.getItem('esto:theme');if(!t){t=matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light';}document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,500&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="assets/css/styles.css">
 </head>
 <body>
-  <header id="site-header" data-dark="true"></header>
+  <div id="social-rail"></div>
+  <header id="site-header" data-hero="true"></header>
 
   <!-- ===================== HERO ===================== -->
   <section class="hero">
-    <div class="hero__bg">
-      <img src="https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&w=1900&q=75" alt="Modern Nairobi home at dusk">
-    </div>
-    <div class="hero__overlay"></div>
+    <div class="hero__bg"><img src="https://images.pexels.com/photos/2119713/pexels-photo-2119713.jpeg?auto=compress&cs=tinysrgb&w=1900" alt=""></div>
+    <div class="hero__grad"></div>
+    <div class="hero__noise"></div>
     <div class="container hero__inner">
-      <div style="max-width:780px">
-        <span class="kicker" style="color:var(--gold-300)">Nairobi's verified-listings agency</span>
-        <h1>Find a home you can <em>actually trust.</em></h1>
-        <p class="hero__lead">No ghost adverts. No hidden broker fees. Every property on Nyumba is physically inspected and title-checked by our team — so what you see is exactly what you get.</p>
+      <span class="hero__badge"><span data-ico="shieldCheck"></span>Every listing verified before you view</span>
+      <h1>Discover a place<br>you can <span class="grad-word">trust.</span></h1>
+      <p class="hero__lead">Nairobi's first property platform where each home carries a data-driven TrustScore. Get started in a few clicks.</p>
 
-        <!-- Search -->
-        <form class="search-card" id="hero-search" data-purpose="sale">
-          <div class="search-tabs">
-            <button type="button" class="active" data-purpose="sale">Buy</button>
-            <button type="button" data-purpose="rent">Rent</button>
-            <button type="button" data-purpose="">All</button>
-          </div>
-          <div class="search-row">
-            <div class="search-field">
-              <label>Location</label>
-              <input id="hs-q" type="text" placeholder="Karen, Kilimani, Westlands…">
-            </div>
-            <div class="search-field">
-              <label>Property type</label>
-              <select id="hs-type">
-                <option value="">Any type</option>
-                <option>House</option><option>Apartment</option>
-                <option>Townhouse</option><option>Land</option>
-              </select>
-            </div>
-            <div class="search-field">
-              <label>Max price</label>
-              <select id="hs-price">
-                <option value="">No max</option>
-                <option value="10000000">Up to 10M</option>
-                <option value="30000000">Up to 30M</option>
-                <option value="60000000">Up to 60M</option>
-                <option value="150000000">Up to 150M</option>
-              </select>
-            </div>
-            <button class="btn btn--gold" type="submit"><span data-ico="search"></span>Search</button>
-          </div>
-        </form>
-
-        <div class="hero__trust">
-          <div><div class="t-num"><span data-count="1200">0</span>+</div><div class="t-lab">Verified listings</div></div>
-          <div><div class="t-num"><span data-count="98">0</span>%</div><div class="t-lab">Title-check pass rate</div></div>
-          <div><div class="t-num">KES <span data-count="14.6">0</span>B</div><div class="t-lab">Property transacted</div></div>
+      <form class="search-wrap" id="hero-search" data-purpose="sale">
+        <div class="search-tabs">
+          <button type="button" data-purpose="sale" class="active">For Sale</button>
+          <button type="button" data-purpose="rent">For Rent</button>
         </div>
+        <div class="search-card">
+          <div class="search-field"><label>Keywords</label><input id="hs-q" type="text" placeholder="Karen, Kilimani, villa…"></div>
+          <div class="search-field"><label>Property type</label>
+            <select id="hs-type"><option value="">All types</option><option>Villa</option><option>Apartment</option><option>Townhouse</option><option>Land</option></select></div>
+          <div class="search-field"><label>Max price</label>
+            <select id="hs-price"><option value="">No max</option><option value="10000000">Up to 10M</option><option value="30000000">Up to 30M</option><option value="60000000">Up to 60M</option><option value="150000000">Up to 150M</option></select></div>
+          <button class="search-icon-btn" type="button" aria-label="More filters" onclick="location.href='properties.html'"><span data-ico="sliders"></span></button>
+          <button class="btn" type="submit"><span data-ico="search"></span>Search</button>
+        </div>
+      </form>
+
+      <div class="hero__stats">
+        <div><div class="hs-num"><span data-count="1200">0</span><span class="u">+</span></div><div class="hs-lab">Verified listings</div></div>
+        <div><div class="hs-num"><span data-count="96">0</span><span class="u">%</span></div><div class="hs-lab">Avg. TrustScore</div></div>
+        <div><div class="hs-num">KES <span data-count="14.6">0</span><span class="u">B</span></div><div class="hs-lab">Property transacted</div></div>
+        <div><div class="hs-num"><span data-count="2400">0</span><span class="u">+</span></div><div class="hs-lab">Happy clients</div></div>
       </div>
     </div>
+    <div class="scroll-cue"><span>Scroll</span><span class="mouse"></span></div>
   </section>
 
-  <!-- ===================== TRUST STRIP ===================== -->
-  <div class="trust-strip">
+  <!-- ===================== MARQUEE ===================== -->
+  <div class="marquee-strip">
     <div class="marquee" aria-hidden="true">
-      <span><span data-ico="shieldCheck"></span>Physically inspected homes</span>
-      <span><span data-ico="scale"></span>Transparent all-in pricing</span>
-      <span><span data-ico="verified"></span>Title-deed verified</span>
-      <span><span data-ico="users"></span>EARB-licensed agents</span>
+      <span><span data-ico="shieldCheck"></span>Title-deed verified</span>
+      <span><span data-ico="eye"></span>Physically inspected</span>
+      <span><span data-ico="scale"></span>Transparent pricing</span>
       <span><span data-ico="camera"></span>Real photos, real rooms</span>
+      <span><span data-ico="award"></span>EARB-licensed agents</span>
       <span><span data-ico="handshake"></span>Secure digital closing</span>
-      <span><span data-ico="shieldCheck"></span>Physically inspected homes</span>
-      <span><span data-ico="scale"></span>Transparent all-in pricing</span>
-      <span><span data-ico="verified"></span>Title-deed verified</span>
-      <span><span data-ico="users"></span>EARB-licensed agents</span>
+      <span><span data-ico="shieldCheck"></span>Title-deed verified</span>
+      <span><span data-ico="eye"></span>Physically inspected</span>
+      <span><span data-ico="scale"></span>Transparent pricing</span>
       <span><span data-ico="camera"></span>Real photos, real rooms</span>
+      <span><span data-ico="award"></span>EARB-licensed agents</span>
       <span><span data-ico="handshake"></span>Secure digital closing</span>
     </div>
   </div>
 
-  <!-- ===================== FEATURED ===================== -->
+  <!-- ===================== CATEGORIES ===================== -->
   <section class="section">
     <div class="container">
       <div class="listings-head">
-        <div class="reveal">
-          <span class="kicker">Handpicked this week</span>
-          <h2 class="section-title">Featured verified homes</h2>
-        </div>
+        <div class="reveal"><span class="kicker">Browse by type</span><h2 class="section-title">A universe of property types</h2></div>
+        <a class="btn btn--ghost reveal" href="properties.html">View all <span data-ico="arrowRight"></span></a>
+      </div>
+      <div class="cats" id="home-cats"></div>
+    </div>
+  </section>
+
+  <!-- ===================== FEATURED ===================== -->
+  <section class="section bg-2">
+    <div class="container">
+      <div class="listings-head">
+        <div class="reveal"><span class="kicker">Handpicked this week</span><h2 class="section-title">Featured verified homes</h2></div>
         <a class="btn btn--ghost reveal" href="properties.html">Browse all <span data-ico="arrowRight"></span></a>
       </div>
       <div class="cards-grid" id="home-featured"></div>
     </div>
   </section>
 
-  <!-- ===================== WHY US ===================== -->
-  <section class="section" style="background:var(--paper)">
+  <!-- ===================== TRUSTSCORE / WHY ===================== -->
+  <section class="section">
     <div class="container">
-      <div class="head-center center reveal">
-        <span class="kicker kicker--center">The Nairobi problem we solve</span>
-        <h2 class="section-title">Buying a home here shouldn't feel like a gamble</h2>
-        <p class="section-lead" style="margin-inline:auto">Fake adverts, ghost listings and surprise "facilitation" fees cost Nairobians time and money every day. Nyumba was built to remove that risk — permanently.</p>
+      <div class="head-center reveal">
+        <span class="kicker kicker--center">What makes Esto different</span>
+        <h2 class="section-title">The TrustScore changes everything</h2>
+        <p class="section-lead">Ghost adverts, fake photos and hidden fees cost Nairobians time and money every day. So we score every home on four checks — before it ever reaches you.</p>
       </div>
       <div class="features" style="margin-top:50px">
-        <div class="feature reveal" data-d="1">
-          <span class="feature__num">01</span>
-          <div class="feature__icon"><span data-ico="shieldCheck"></span></div>
-          <h3>Physically inspected</h3>
-          <p>Our team visits every home, GPS-tags it and photographs each room before it goes live. If it isn't real, it isn't listed.</p>
-        </div>
-        <div class="feature reveal" data-d="2">
-          <span class="feature__num">02</span>
-          <div class="feature__icon"><span data-ico="verified"></span></div>
-          <h3>Title-deed verified</h3>
-          <p>We confirm ownership and search the title before marketing — you view only properties that can actually be transacted.</p>
-        </div>
-        <div class="feature reveal" data-d="3">
-          <span class="feature__num">03</span>
-          <div class="feature__icon"><span data-ico="scale"></span></div>
-          <h3>Transparent pricing</h3>
-          <p>One clear, all-in fee schedule shown up front. No hidden broker cuts, no surprises at closing.</p>
-        </div>
-        <div class="feature reveal" data-d="4">
-          <span class="feature__num">04</span>
-          <div class="feature__icon"><span data-ico="key"></span></div>
-          <h3>Secure closing</h3>
-          <p>Digital offers, tracked payments and licensed conveyancing partners keep your money and your deal safe.</p>
-        </div>
+        <div class="feature reveal" data-d="1"><span class="feature__num">01</span><div class="feature__icon"><span data-ico="shieldCheck"></span></div><h3>Title verified</h3><p>We search ownership and the title deed so you only view homes that can truly be transacted.</p></div>
+        <div class="feature reveal" data-d="2"><span class="feature__num">02</span><div class="feature__icon"><span data-ico="eye"></span></div><h3>Physically inspected</h3><p>An agent visits, GPS-tags and photographs every room. If it isn't real, it isn't listed.</p></div>
+        <div class="feature reveal" data-d="3"><span class="feature__num">03</span><div class="feature__icon"><span data-ico="scale"></span></div><h3>Price checked</h3><p>Each asking price is benchmarked against real area data, so you know it's fair.</p></div>
+        <div class="feature reveal" data-d="4"><span class="feature__num">04</span><div class="feature__icon"><span data-ico="award"></span></div><h3>Agent rated</h3><p>Only licensed agents with a verified track record can list — and their record feeds the score.</p></div>
       </div>
     </div>
   </section>
 
-  <!-- ===================== ABOUT / SPLIT ===================== -->
-  <section class="section">
+  <!-- ===================== SPLIT ===================== -->
+  <section class="section bg-2">
     <div class="container">
       <div class="split">
         <div class="split__media reveal">
-          <img src="https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&w=1000&q=75" alt="Nyumba agent verifying a property">
-          <div class="float-card float-card--br">
-            <div class="fc-ico"><span data-ico="verified"></span></div>
-            <div><b data-count="1200">0</b><small>Homes verified &amp; live</small></div>
-          </div>
-          <div class="float-card float-card--tl">
-            <div class="fc-ico"><span data-ico="star"></span></div>
-            <div><b>4.9<span style="font-size:.6em">/5</span></b><small>Client rating</small></div>
-          </div>
+          <img src="https://images.pexels.com/photos/3288103/pexels-photo-3288103.png?auto=compress&cs=tinysrgb&w=1000" alt="Esto agent verifying a home">
+          <div class="float-card float-card--br"><div class="fc-ico"><span data-ico="shieldCheck"></span></div><div><b data-count="96">0</b><small>Average TrustScore</small></div></div>
+          <div class="float-card float-card--tl"><div class="fc-ico"><span data-ico="star"></span></div><div><b>4.9<span style="font-size:.6em">/5</span></b><small>Client rating</small></div></div>
         </div>
         <div class="reveal" data-d="1">
-          <span class="kicker">Who we are</span>
-          <h2 class="section-title">A Nairobi agency built on proof, not promises</h2>
-          <p class="section-lead">Nyumba started when our founders lost weeks chasing listings that simply didn't exist. We rebuilt the process from the ground up around one rule: every home is verified before you ever see it.</p>
+          <span class="kicker">The Nairobi problem we solve</span>
+          <h2 class="section-title">Buying a home shouldn't feel like a gamble</h2>
+          <p class="section-lead">Esto began when our founders lost weeks chasing listings that didn't exist. We rebuilt the process around one rule: prove it, then list it.</p>
           <ul class="tick-list">
-            <li><span class="ti"><span data-ico="check"></span></span><div><b>Local, on-the-ground team</b><p>Field agents across Karen, Westlands, Kilimani, Runda and beyond.</p></div></li>
-            <li><span class="ti"><span data-ico="check"></span></span><div><b>Diaspora-friendly</b><p>Buy from abroad with verified video tours and remote, secure closing.</p></div></li>
+            <li><span class="ti"><span data-ico="check"></span></span><div><b>One transparent fee</b><p>An all-in schedule shown up front — no surprise "facilitation" cuts at closing.</p></div></li>
+            <li><span class="ti"><span data-ico="check"></span></span><div><b>Diaspora-ready</b><p>Buy from abroad with verified video tours and secure, remote closing.</p></div></li>
             <li><span class="ti"><span data-ico="check"></span></span><div><b>Data you can act on</b><p>Honest area pricing, yields and trends — not inflated guesswork.</p></div></li>
           </ul>
-          <a class="btn" href="about.html" style="margin-top:28px">Our verification promise <span data-ico="arrowRight"></span></a>
+          <a class="btn" href="about.html" style="margin-top:28px">How TrustScore works <span data-ico="arrowRight"></span></a>
         </div>
       </div>
     </div>
@@ -177,25 +142,22 @@
   <!-- ===================== STATS ===================== -->
   <section class="section--tight">
     <div class="container">
-      <div class="stats-band reveal" style="padding:clamp(40px,6vw,64px)">
+      <div class="stats-band reveal" style="padding:clamp(42px,6vw,66px)">
         <div class="stats-grid">
           <div class="stat"><div class="s-num"><span data-count="1200">0</span><span class="u">+</span></div><div class="s-lab">Verified listings</div></div>
           <div class="stat"><div class="s-num">KES <span data-count="14.6">0</span><span class="u">B</span></div><div class="s-lab">Property transacted</div></div>
           <div class="stat"><div class="s-num"><span data-count="2400">0</span><span class="u">+</span></div><div class="s-lab">Happy clients</div></div>
-          <div class="stat"><div class="s-num"><span data-count="18">0</span></div><div class="s-lab">Nairobi neighbourhoods</div></div>
+          <div class="stat"><div class="s-num"><span data-count="18">0</span></div><div class="s-lab">Neighbourhoods</div></div>
         </div>
       </div>
     </div>
   </section>
 
   <!-- ===================== NEIGHBORHOODS ===================== -->
-  <section class="section" style="background:var(--paper)">
+  <section class="section">
     <div class="container">
       <div class="listings-head">
-        <div class="reveal">
-          <span class="kicker">Explore the city</span>
-          <h2 class="section-title">Nairobi neighbourhoods we cover</h2>
-        </div>
+        <div class="reveal"><span class="kicker">Explore the city</span><h2 class="section-title">Nairobi neighbourhoods</h2></div>
         <a class="btn btn--ghost reveal" href="properties.html">See all areas <span data-ico="arrowRight"></span></a>
       </div>
       <div class="hoods" id="home-hoods"></div>
@@ -203,49 +165,40 @@
   </section>
 
   <!-- ===================== VIDEO ===================== -->
-  <section class="section">
+  <section class="section bg-2">
     <div class="container">
-      <div class="head-center center reveal">
-        <span class="kicker kicker--center">Inside Nyumba</span>
-        <h2 class="section-title">See how we verify every home</h2>
-        <p class="section-lead" style="margin-inline:auto">A ninety-second look at the people and the process behind Nairobi's most trusted listings.</p>
-      </div>
+      <div class="head-center reveal"><span class="kicker kicker--center">Inside Esto</span><h2 class="section-title">See how we verify every home</h2></div>
       <div class="video-wrap reveal" data-video style="margin-top:40px">
-        <video preload="none" playsinline poster="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1400&q=70">
-          <source src="assets/video/nyumba-showreel.mp4" type="video/mp4">
+        <video preload="none" playsinline poster="https://images.pexels.com/photos/1643383/pexels-photo-1643383.jpeg?auto=compress&cs=tinysrgb&w=1400">
+          <source src="assets/video/esto-showreel.mp4" type="video/mp4">
         </video>
         <div class="video-poster">
-          <img src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1400&q=70" alt="Nyumba showreel">
+          <img src="https://images.pexels.com/photos/1643383/pexels-photo-1643383.jpeg?auto=compress&cs=tinysrgb&w=1400" alt="Esto showreel">
           <button class="video-play" aria-label="Play showreel"><span data-ico="play"></span></button>
         </div>
+        <div class="video-caption"><h3>Real homes. Real proof.</h3><p>A short look at the people and the process behind Nairobi's most trusted listings.</p></div>
       </div>
     </div>
   </section>
 
   <!-- ===================== PROCESS ===================== -->
-  <section class="section" style="background:var(--paper)">
+  <section class="section">
     <div class="container">
-      <div class="head-center center reveal">
-        <span class="kicker kicker--center">How it works</span>
-        <h2 class="section-title">From first search to keys in hand</h2>
-      </div>
+      <div class="head-center reveal"><span class="kicker kicker--center">How it works</span><h2 class="section-title">From first search to keys in hand</h2></div>
       <div class="steps" style="margin-top:50px">
-        <div class="step reveal" data-d="1"><div class="step__n">1</div><h4>Search verified stock</h4><p>Browse only homes we've inspected and title-checked. Filter by area, budget and lifestyle.</p></div>
-        <div class="step reveal" data-d="2"><div class="step__n">2</div><h4>Book a real viewing</h4><p>See it in person or on a live video tour with the assigned agent — the unit always exists.</p></div>
+        <div class="step reveal" data-d="1"><div class="step__n">1</div><h4>Search verified stock</h4><p>Browse only homes we've scored. Filter by area, budget and TrustScore.</p></div>
+        <div class="step reveal" data-d="2"><div class="step__n">2</div><h4>Book a real viewing</h4><p>See it in person or on a live video tour — the unit always exists.</p></div>
         <div class="step reveal" data-d="3"><div class="step__n">3</div><h4>Make a secure offer</h4><p>Submit a digital offer with transparent fees and tracked, protected payments.</p></div>
-        <div class="step reveal" data-d="4"><div class="step__n">4</div><h4>Close with confidence</h4><p>Our licensed conveyancing partners handle transfer, and you collect the keys.</p></div>
+        <div class="step reveal" data-d="4"><div class="step__n">4</div><h4>Close with confidence</h4><p>Our licensed conveyancing partners handle transfer — you collect the keys.</p></div>
       </div>
     </div>
   </section>
 
   <!-- ===================== AGENTS ===================== -->
-  <section class="section">
+  <section class="section bg-2">
     <div class="container">
       <div class="listings-head">
-        <div class="reveal">
-          <span class="kicker">Meet the team</span>
-          <h2 class="section-title">Agents who put verification first</h2>
-        </div>
+        <div class="reveal"><span class="kicker">Meet the team</span><h2 class="section-title">Agents who put proof first</h2></div>
         <a class="btn btn--ghost reveal" href="agents.html">All agents <span data-ico="arrowRight"></span></a>
       </div>
       <div class="agents-grid" id="home-agents"></div>
@@ -253,12 +206,9 @@
   </section>
 
   <!-- ===================== TESTIMONIALS ===================== -->
-  <section class="section" style="background:var(--paper)">
+  <section class="section">
     <div class="container">
-      <div class="head-center center reveal">
-        <span class="kicker kicker--center">Client stories</span>
-        <h2 class="section-title">Trusted by buyers, renters &amp; investors</h2>
-      </div>
+      <div class="head-center reveal"><span class="kicker kicker--center">Client stories</span><h2 class="section-title">Trusted across Nairobi</h2></div>
       <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(300px,1fr));margin-top:44px" id="home-tests"></div>
     </div>
   </section>
@@ -267,10 +217,10 @@
   <section class="section">
     <div class="container">
       <div class="cta-band reveal">
-        <div class="cta-band__bg"><img src="https://images.unsplash.com/photo-1600566753086-00f18fb6b3ea?auto=format&fit=crop&w=1600&q=70" alt=""></div>
+        <div class="cta-band__bg"><img src="https://images.pexels.com/photos/1571460/pexels-photo-1571460.jpeg?auto=compress&cs=tinysrgb&w=1600" alt=""></div>
         <span class="kicker kicker--center" style="color:var(--gold-300);justify-content:center;display:inline-flex">Ready when you are</span>
-        <h2>List with proof. Buy with confidence.</h2>
-        <p>Whether you're selling a home in Runda or hunting a first apartment in Syokimau, our verified process gets you there safely.</p>
+        <h2>List with proof. Buy with certainty.</h2>
+        <p>Whether you're selling in Runda or hunting a first apartment in Syokimau, the Esto TrustScore gets you there safely.</p>
         <div style="display:flex;gap:14px;justify-content:center;flex-wrap:wrap">
           <a class="btn btn--gold btn--lg" href="properties.html"><span data-ico="home"></span>Find a home</a>
           <a class="btn btn--outline-light btn--lg" href="contact.html"><span data-ico="tag"></span>List your property</a>
@@ -281,17 +231,10 @@
 
   <footer id="site-footer"></footer>
 
-  <!-- PWA install prompt -->
   <div class="install-banner" id="install-banner">
     <div class="ib-ico"><span data-ico="download"></span></div>
-    <div>
-      <b>Install Nyumba</b>
-      <small>Add our app to your home screen for faster, offline-ready browsing.</small>
-      <div class="ib-actions">
-        <button class="btn btn--sm" data-install>Install</button>
-        <button class="btn btn--ghost btn--sm" data-dismiss>Not now</button>
-      </div>
-    </div>
+    <div><b>Install Esto</b><small>Add our app to your home screen for faster, offline-ready browsing.</small>
+      <div class="ib-actions"><button class="btn btn--sm" data-install>Install</button><button class="btn btn--ghost btn--sm" data-dismiss>Not now</button></div></div>
   </div>
 
   <script src="assets/js/firebase-config.js"></script>

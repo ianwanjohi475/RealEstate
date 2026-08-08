@@ -3,72 +3,40 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Verified Properties in Nairobi — Buy & Rent | Nyumba</title>
-  <meta name="description" content="Browse Nyumba's verified homes for sale and rent across Karen, Kilimani, Westlands, Runda, Lavington and more. Real photos, real titles, transparent prices.">
-  <meta name="theme-color" content="#0E3B32">
+  <title>Verified Properties in Nairobi — Buy & Rent | Esto</title>
+  <meta name="description" content="Browse Esto's verified homes for sale and rent across Karen, Kilimani, Westlands, Runda, Lavington and more. Each carries a data-driven TrustScore.">
+  <meta name="theme-color" content="#8B1E3F">
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="assets/icons/favicon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="assets/icons/icon-192.png">
+  <script>(function(){try{var t=localStorage.getItem('esto:theme');if(!t){t=matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light';}document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,500&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="assets/css/styles.css">
 </head>
 <body>
-  <header id="site-header"></header>
+  <header id="site-header" data-hero="true"></header>
 
   <section class="page-hero">
-    <div class="page-hero__bg"><img src="https://images.unsplash.com/photo-1613977257363-707ba9348227?auto=format&fit=crop&w=1800&q=70" alt="Nairobi homes"></div>
+    <div class="page-hero__bg"><img src="https://images.pexels.com/photos/1370704/pexels-photo-1370704.jpeg?auto=compress&cs=tinysrgb&w=1800" alt=""></div>
+    <div class="page-hero__grad"></div>
     <div class="container">
       <div class="crumbs"><a href="index.html">Home</a><span data-ico="chevronRight"></span><span>Properties</span></div>
       <h1>Verified homes across Nairobi</h1>
-      <p>Every listing below has been physically inspected and title-checked by our team. Filter to find yours.</p>
+      <p>Every listing below has been scored on title, inspection, price and agent record. Filter to find yours.</p>
     </div>
   </section>
 
   <section class="section--tight" style="padding-top:34px">
     <div class="container">
       <form class="filter-bar reveal" onsubmit="return false">
-        <div class="fld">
-          <label>Search area</label>
-          <input id="f-q" type="text" placeholder="Karen, Westlands…">
-        </div>
-        <div class="fld">
-          <label>Purpose</label>
-          <select id="f-purpose" data-filter>
-            <option value="">Buy or rent</option>
-            <option value="sale">For sale</option>
-            <option value="rent">To let</option>
-          </select>
-        </div>
-        <div class="fld">
-          <label>Type</label>
-          <select id="f-type" data-filter>
-            <option value="">Any type</option>
-            <option>House</option><option>Apartment</option>
-            <option>Townhouse</option><option>Land</option>
-          </select>
-        </div>
-        <div class="fld">
-          <label>Min beds</label>
-          <select id="f-beds" data-filter>
-            <option value="">Any</option>
-            <option value="1">1+</option><option value="2">2+</option>
-            <option value="3">3+</option><option value="4">4+</option><option value="5">5+</option>
-          </select>
-        </div>
-        <div class="fld">
-          <label>Max price</label>
-          <select id="f-max" data-filter>
-            <option value="">No max</option>
-            <option value="200000">Rent · 200k</option>
-            <option value="10000000">10M</option>
-            <option value="30000000">30M</option>
-            <option value="60000000">60M</option>
-            <option value="150000000">150M</option>
-          </select>
-        </div>
-        <button class="btn btn--ghost" id="f-reset" type="button"><span data-ico="filter"></span>Reset</button>
+        <div class="fld"><label>Search area / type</label><input id="f-q" type="text" placeholder="Karen, villa…"></div>
+        <div class="fld"><label>Purpose</label><select id="f-purpose" data-filter><option value="">Buy or rent</option><option value="sale">For sale</option><option value="rent">To let</option></select></div>
+        <div class="fld"><label>Type</label><select id="f-type" data-filter><option value="">Any type</option><option>Villa</option><option>Apartment</option><option>Townhouse</option><option>Land</option></select></div>
+        <div class="fld"><label>Min beds</label><select id="f-beds" data-filter><option value="">Any</option><option value="1">1+</option><option value="2">2+</option><option value="3">3+</option><option value="4">4+</option><option value="5">5+</option></select></div>
+        <div class="fld"><label>Max price</label><select id="f-max" data-filter><option value="">No max</option><option value="200000">Rent · 200k</option><option value="10000000">10M</option><option value="30000000">30M</option><option value="60000000">60M</option><option value="150000000">150M</option></select></div>
+        <button class="btn btn--ghost" id="f-reset" type="button"><span data-ico="sliders"></span>Reset</button>
       </form>
     </div>
   </section>
@@ -78,15 +46,16 @@
       <div class="listings-head">
         <div class="result-count" id="result-count"></div>
         <div style="display:flex;gap:12px;align-items:center">
-          <select id="f-sort" style="padding:12px 14px;border:1px solid var(--line);border-radius:10px;font-family:inherit;font-weight:600;background:var(--paper)">
+          <select id="f-sort" style="padding:12px 14px;border:1px solid var(--line);border-radius:11px;font-family:inherit;font-weight:600;background:var(--card);color:var(--ink)">
             <option value="featured">Sort: Featured</option>
+            <option value="trust">Highest TrustScore</option>
             <option value="low">Price: Low to high</option>
             <option value="high">Price: High to low</option>
             <option value="new">Newest built</option>
           </select>
           <div class="view-toggle">
-            <button class="active" data-view="grid" aria-label="Grid view"><span data-ico="grid"></span></button>
-            <button data-view="list" aria-label="List view"><span data-ico="list"></span></button>
+            <button class="active" data-view="grid" aria-label="Grid"><span data-ico="grid"></span></button>
+            <button data-view="list" aria-label="List"><span data-ico="list"></span></button>
           </div>
         </div>
       </div>

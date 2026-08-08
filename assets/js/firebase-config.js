@@ -1,28 +1,21 @@
 /* ============================================================
-   NYUMBA — Firebase configuration
+   ESTO — Firebase configuration (LIVE)
    ------------------------------------------------------------
-   Project: RealEstate
-   Project ID:     realestate-17867
-   Project number: 626024295803
-
-   HOW TO GO LIVE (2 minutes):
-   1. Open  https://console.firebase.google.com/project/realestate-17867
-   2. Project settings (gear icon)  ->  "Your apps"  ->  add/select a Web app.
-   3. Copy the two missing values below:  apiKey  and  appId.
-   4. Paste them in place of the REPLACE_ME placeholders.
-   5. In the console: Build -> Authentication -> Sign-in method,
-      enable "Email/Password" and "Google".
-   6. Add your domain under Authentication -> Settings -> Authorized domains.
-
-   Until real keys are added, the site runs in a self-contained DEMO
-   auth mode (accounts stored locally in the browser) so the portfolio
-   is always fully clickable.
+   Project: RealEstate  ·  ID: realestate-17867
+   These are public client-side keys (safe to ship in the browser).
+   Auth methods to enable in the console:
+     Build -> Authentication -> Sign-in method
+       - Email/Password   (required for signup/login)
+       - Google           (optional, for "Continue with Google")
+   Add your hosting domain + localhost under
+     Authentication -> Settings -> Authorized domains.
    ============================================================ */
-window.NYUMBA_FIREBASE = {
-  apiKey: "REPLACE_ME_WEB_API_KEY",
+window.ESTO_FIREBASE = {
+  apiKey: "AIzaSyDNqQmx5PQTmT85tisXMVKWi5ZHDkU9QC4",
   authDomain: "realestate-17867.firebaseapp.com",
   projectId: "realestate-17867",
-  storageBucket: "realestate-17867.appspot.com",
+  storageBucket: "realestate-17867.firebasestorage.app",
   messagingSenderId: "626024295803",
-  appId: "REPLACE_ME_APP_ID"
+  appId: "1:626024295803:web:6fe5c399d560847550e1de",
+  measurementId: "G-0WTGGG1093"
 };

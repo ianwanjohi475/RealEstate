@@ -1,130 +1,94 @@
-# Nyumba — Verified Homes, Nairobi
+# Esto — Real Estate, Made Certain
 
 A professional, installable real-estate web app built from scratch as a portfolio
-project. Nyumba is a fictional-but-realistic Nairobi agency with a clear mission:
-**end ghost listings, fake adverts and hidden broker fees** by only marketing homes
-that have been *physically inspected and title-checked*.
+project. **Esto** is a Nairobi property platform with one unique idea at its core:
 
-> Live demo brand · Buy · Rent · Invest · Progressive Web App · Firebase Auth
+> **The Esto TrustScore** — every listing is scored 0–100 as the average of four
+> independent checks (title & ownership, physical inspection, price fairness, and
+> agent record) *before* it is ever shown to you. No ghost listings, no fake photos,
+> no hidden broker fees.
+
+Maroon theme · light **and** dark mode · Firebase auth · PWA · Nairobi-focused.
 
 ---
 
 ## Highlights
 
-- **Bespoke design system** — deep-forest + champagne-gold luxury palette, `Fraunces`
-  display serif paired with `Plus Jakarta Sans`, custom SVG icon set (no emojis, no
-  icon-font dependency), scroll-reveal animations, animated counters, marquee and a
-  video showreel section.
-- **8 fully-built pages** — Home, Properties (live filtering + sort + grid/list),
-  Property detail (gallery lightbox, map, amenities, **live mortgage calculator**,
-  enquiry form), Agents, About, Contact (map + form), Login, Signup and a
-  **professional Dashboard** (KPIs, chart, saved homes, viewings, market insight,
-  messages, settings).
-- **Firebase Authentication** — email/password + Google sign-in. Ships with a
-  self-contained **demo mode** so the app is fully clickable before you add keys.
-- **Installable PWA** — web manifest, maskable icons, offline service worker
-  (app-shell cache-first, network-first navigation, stale-while-revalidate images)
-  and an in-app install prompt.
-- **Nairobi-real content** — Karen, Kilimani, Westlands, Runda, Lavington,
-  Kileleshwa, Kitisuru, Nyari, Syokimau, Ruaka; KES pricing; EARB-style licensing.
-- **Zero build step** — pure HTML/CSS/vanilla JS. Just serve the folder.
+- **Bespoke maroon design system** with full **light + dark mode** (persisted, respects
+  system preference), `Sora` display + `Plus Jakarta Sans` body, a custom SVG icon set
+  (no emojis), floating pill navigation, gradient hero, scroll-reveal + counter
+  animations, marquee, and a video showreel.
+- **The TrustScore** — a signature widget: a conic-gradient ring on every property
+  card and a full four-factor breakdown on each detail page.
+- **8 pages** — Home, Properties (live filter/sort incl. *Highest TrustScore*),
+  Property detail (gallery + lightbox, TrustScore breakdown, map, live mortgage
+  calculator, enquiry), Agents, About (how TrustScore works), Contact, and a
+  redesigned **Dashboard** (KPI cards with sparklines, bar chart, donut, saved homes,
+  viewings, market insight, messages, settings with a theme switch).
+- **Real Firebase Authentication** — email/password + Google, wired to project
+  `realestate-17867`, plus Analytics. A slide-in **Login / Register modal** (matching
+  modern real-estate templates) handles auth site-wide.
+- **Installable PWA** — manifest, maskable icons, offline service worker, install prompt.
+- **Mixed real image sources** (Pexels + Unsplash CDNs) with a branded graceful
+  fallback if any image fails to load.
 
 ---
 
-## Run it locally
+## Firebase — it's live
 
-Any static file server works. For example:
+`assets/js/firebase-config.js` already contains the project's public web config
+(`realestate-17867`). To finish enabling sign-in:
+
+1. Firebase Console → **Build → Authentication → Sign-in method** → enable
+   **Email/Password** (and **Google** for the Google button).
+2. **Authentication → Settings → Authorized domains** → add your hosting domain and
+   `localhost`.
+
+That's all — signup, login and Google sign-in then run against Firebase. If the
+Firebase SDK can't load (e.g. offline), the app automatically falls back to a local
+demo auth so the portfolio is never broken.
+
+---
+
+## Run locally
 
 ```bash
-# Python (already available on most machines)
-python3 -m http.server 8080
-
-# or Node
-npx serve .
+python3 -m http.server 8080     # then open http://localhost:8080
 ```
 
-Then open <http://localhost:8080>.
+PWA install + service worker require `http://localhost` or HTTPS.
 
-> The service worker and "Add to home screen" require `http://localhost` or HTTPS —
-> opening `index.html` via `file://` will still render the site but PWA features stay off.
-
----
-
-## Connect the real Firebase project (2 minutes)
-
-The project is pre-wired to **RealEstate** (`realestate-17867`). To switch from demo
-mode to live auth:
-
-1. Open the console →
-   <https://console.firebase.google.com/project/realestate-17867/overview>
-2. **Project settings** → **Your apps** → add/select a **Web app**.
-3. Copy the `apiKey` and `appId` into `assets/js/firebase-config.js`
-   (replace the two `REPLACE_ME_...` placeholders). The other values are already set.
-4. **Build → Authentication → Sign-in method**: enable **Email/Password** and **Google**.
-5. **Authentication → Settings → Authorized domains**: add your hosting domain
-   (and `localhost` for testing).
-
-That's it — signup, login and Google sign-in now use Firebase. No other code changes.
-
-| Config value | Status |
-|---|---|
-| `projectId` | `realestate-17867` ✅ |
-| `authDomain` | `realestate-17867.firebaseapp.com` ✅ |
-| `storageBucket` | `realestate-17867.appspot.com` ✅ |
-| `messagingSenderId` | `626024295803` ✅ |
-| `apiKey` | add from console |
-| `appId` | add from console |
-
----
-
-## Deploy to Firebase Hosting
+## Deploy (Firebase Hosting)
 
 ```bash
 npm install -g firebase-tools
 firebase login
-firebase deploy --only hosting     # uses the included firebase.json / .firebaserc
+firebase deploy --only hosting        # config in firebase.json / .firebaserc
 ```
 
-The site deploys to `https://realestate-17867.web.app`.
+Deploys to `https://realestate-17867.web.app`.
 
 ---
 
-## Project structure
+## Structure
 
 ```
-.
-├── index.html            # Landing page
-├── properties.html       # Listings with live filters
-├── property.html         # Single property (?id=nyum-001)
-├── agents.html           # Team
-├── about.html            # Story + verification promise
-├── contact.html          # Contact form + map
-├── login.html            # Firebase / demo login
-├── signup.html           # Firebase / demo signup
-├── dashboard.html        # Authenticated dashboard
-├── manifest.webmanifest  # PWA manifest
-├── sw.js                 # Service worker
-├── firebase.json         # Hosting config
-├── .firebaserc           # Project alias
-└── assets/
-    ├── css/styles.css     # Full design system
-    ├── js/
-    │   ├── data.js        # Listings, agents, testimonials
-    │   ├── icons.js       # Inline SVG icon set
-    │   ├── firebase-config.js
-    │   ├── auth.js        # Firebase + demo auth
-    │   └── main.js        # Chrome, rendering, PWA, interactions
-    ├── icons/             # Favicon + PWA icons
-    ├── img/               # Pattern
-    └── video/             # Showreel
+index · properties · property · agents · about · contact · dashboard   (pages)
+login/signup  → redirect into the auth modal
+assets/css/styles.css        design system + light/dark themes
+assets/js/data.js            listings, agents, TrustScores, categories
+assets/js/icons.js           inline SVG icon set
+assets/js/firebase-config.js live Firebase config
+assets/js/auth.js            Firebase auth (+ demo fallback)
+assets/js/main.js            chrome, theme, auth modal, rendering, PWA
+assets/video/esto-showreel.mp4
+manifest.webmanifest · sw.js · firebase.json
 ```
-
----
 
 ## Contact (portfolio)
 
 - **Phone / WhatsApp:** 0758 950 370
 - **Email:** ianwanjohi475@gmail.com
 
-Built by **Ian Wanjohi**. Images courtesy of Unsplash. Maps by OpenStreetMap.
-This is a portfolio demonstration — the agency, listings and reviews are illustrative.
+Built by **Ian Wanjohi**. Photos: Pexels & Unsplash. Maps: OpenStreetMap.
+The agency, listings and reviews are illustrative for portfolio purposes.

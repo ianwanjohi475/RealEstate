@@ -1,5 +1,5 @@
 /* ============================================================
-   NYUMBA — inline SVG icon set (Lucide-style, no emojis)
+   ESTO — inline SVG icon set (Lucide-style, no emojis)
    Usage:  NyIcon.get('bed')  -> "<svg ...>...</svg>"
            <span data-ico="bed"></span>  (auto-hydrated by main.js)
    ============================================================ */
@@ -75,7 +75,27 @@
     sparkles: '<path d="M12 3l1.6 4.4L18 9l-4.4 1.6L12 15l-1.6-4.4L6 9l4.4-1.6Z"/><path d="M5 15l.8 2.2L8 18l-2.2.8L5 21l-.8-2.2L2 18l2.2-.8Z"/>',
     leaf: '<path d="M11 20A7 7 0 0 1 4 13c0-6 7-9 16-9 0 9-3 16-9 16Z"/><path d="M11 20c0-6 2-9 6-11"/>',
     map: '<polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"/><line x1="9" y1="3" x2="9" y2="18"/><line x1="15" y1="6" x2="15" y2="21"/>',
-    camera: '<path d="M4 8h3l1.5-2h7L17 8h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1Z"/><circle cx="12" cy="13" r="3.2"/>'
+    camera: '<path d="M4 8h3l1.5-2h7L17 8h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1Z"/><circle cx="12" cy="13" r="3.2"/>',
+    /* theme */
+    sun: '<circle cx="12" cy="12" r="4.2"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
+    moon: '<path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"/>',
+    sliders: '<line x1="4" y1="8" x2="20" y2="8"/><line x1="4" y1="16" x2="20" y2="16"/><circle cx="9" cy="8" r="2.4" fill="currentColor" stroke="none"/><circle cx="15" cy="16" r="2.4" fill="currentColor" stroke="none"/>',
+    arrowUp: '<line x1="12" y1="19" x2="12" y2="5"/><polyline points="6 11 12 5 18 11"/>',
+    quote: '<path d="M7 7h4v6a4 4 0 0 1-4 4M13 7h4v6a4 4 0 0 1-4 4"/>',
+    pinterest: '<circle cx="12" cy="12" r="9"/><path d="M9.5 19c-.4-1.8 0-3.5 1-7.5a2.6 2.6 0 1 1 4.4 1.9c-.6 1.8-2.6 2-3.2.4"/>',
+    globe: '<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a15 15 0 0 1 0 18M12 3a15 15 0 0 0 0 18"/>',
+    award: '<circle cx="12" cy="9" r="6"/><path d="M9 14.5 8 22l4-2 4 2-1-7.5"/>',
+    trendUp: '<polyline points="3 17 9 11 13 15 21 7"/><polyline points="16 7 21 7 21 12"/>',
+    coins: '<ellipse cx="9" cy="7" rx="6" ry="3"/><path d="M3 7v5c0 1.7 2.7 3 6 3s6-1.3 6-3V7"/><path d="M15 12.5c2.4.4 6 1.4 6 3.5 0 1.7-2.7 3-6 3s-6-1.3-6-3"/>',
+    /* property categories */
+    villa: '<path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/><path d="M9 20v-5h6v5"/><path d="M10 10h4"/>',
+    bungalow: '<path d="M3 12l9-6 9 6"/><path d="M5 11v9h14v-9"/><rect x="9" y="14" width="6" height="6"/>',
+    apartment2: '<rect x="5" y="3" width="14" height="18" rx="1.5"/><path d="M9 7h2M13 7h2M9 11h2M13 11h2M9 15h2M13 15h2"/><path d="M10 21v-3h4v3"/>',
+    townhome: '<rect x="3" y="8" width="8" height="13" rx="1"/><rect x="13" y="5" width="8" height="16" rx="1"/><path d="M6 12h2M6 16h2M16 9h2M16 13h2M16 17h2"/>',
+    office: '<rect x="4" y="2" width="16" height="20" rx="1.5"/><path d="M8 6h2M14 6h2M8 10h2M14 10h2M8 14h2M14 14h2"/><path d="M10 22v-4h4v4"/>',
+    factory: '<path d="M3 21V9l6 4V9l6 4V5l6 4v12Z"/><path d="M7 21v-4M12 21v-4M17 21v-4"/>',
+    shop: '<path d="M4 9h16l-1-4H5Z"/><path d="M5 9v11a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V9"/><path d="M9 21v-6h6v6"/>',
+    land: '<path d="M4 20h16"/><path d="M4 20l4-9 4 5 3-4 5 8"/><circle cx="17" cy="5" r="2"/>'
   };
 
   function svg(name, cls) {
@@ -84,5 +104,6 @@
     return `<svg class="ico${cls ? " " + cls : ""}" viewBox="0 0 24 24" aria-hidden="true">${inner}</svg>`;
   }
 
-  global.NyIcon = { get: svg, names: Object.keys(P) };
+  global.EstoIcon = { get: svg, names: Object.keys(P) };
+  global.NyIcon = global.EstoIcon; // legacy alias
 })(window);
