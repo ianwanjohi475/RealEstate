@@ -12,11 +12,11 @@ Thumbs.db
 .vscode/
 .idea/
 
-# Env — never commit real secrets
-.env
+# Env (root)
 .env.local
-server/.env
-**/.env
+
+# NOTE: server/.env IS committed at the owner's request so `git pull` works
+# out of the box on a PRIVATE repo. Keep this repository private.
 
 # Server deps
 server/node_modules/

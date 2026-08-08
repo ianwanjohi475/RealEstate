@@ -34,10 +34,13 @@
   function setTheme(t) {
     document.documentElement.setAttribute("data-theme", t);
     try { localStorage.setItem(THEME_KEY, t); } catch (e) {}
-    $$("[data-theme-ico]").forEach((el) => { el.dataset.ico = t === "dark" ? "sun" : "moon"; el.dataset.done = ""; hydrateIcons(el.parentElement); });
+    $$("[data-theme-ico]").forEach((el) => { el.innerHTML = I(t === "dark" ? "sun" : "moon"); });
     const meta = $('meta[name="theme-color"]'); if (meta) meta.setAttribute("content", t === "dark" ? "#120c16" : "#8B1E3F");
   }
   function toggleTheme() { setTheme(currentTheme() === "dark" ? "light" : "dark"); }
+
+  /* ---------- Official Google logo ---------- */
+  const GOOGLE_LOGO = '<svg width="20" height="20" viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>';
 
   /* ---------- Brand (wordmark) ---------- */
   function brandHTML(href = "index.html") {
@@ -65,7 +68,7 @@
         ${brandHTML()}
         <nav class="nav-pill">${links}</nav>
         <div class="header-actions">
-          <button class="theme-toggle" data-theme-toggle aria-label="Toggle theme"><span data-theme-ico data-ico="${currentTheme() === "dark" ? "sun" : "moon"}"></span></button>
+          <button class="theme-toggle" data-theme-toggle data-theme-ico aria-label="Toggle theme">${I(currentTheme() === "dark" ? "sun" : "moon")}</button>
           ${authArea}
           <button class="nav-toggle" aria-label="Menu" data-open-drawer>${I("menu")}</button>
         </div>
@@ -76,7 +79,7 @@
           <div class="drawer-head">${brandHTML()}<button class="drawer-close" data-close-drawer aria-label="Close">${I("close")}</button></div>
           ${NAV.map(([h, l]) => `<a href="${h}" class="${page === h ? "active" : ""}" style="${page === h ? "color:var(--brand)" : ""}">${l}</a>`).join("")}
           ${user ? `<a href="dashboard.html">Dashboard</a>` : ""}
-          <div class="drawer-theme">Dark mode <button data-theme-toggle><span data-theme-ico data-ico="${currentTheme() === "dark" ? "sun" : "moon"}"></span></button></div>
+          <div class="drawer-theme">Dark mode <button data-theme-toggle data-theme-ico>${I(currentTheme() === "dark" ? "sun" : "moon")}</button></div>
           <div class="drawer-contact">
             <a href="tel:+${PHONE_INTL}">${I("phone")}${PHONE}</a>
             <a href="mailto:${EMAIL}">${I("mail")}${EMAIL}</a>
@@ -183,7 +186,7 @@
     $$("[data-auth-tab]").forEach((b) => b.classList.toggle("active", b.dataset.authTab === mode));
     const a = $("#auth-alert"); if (a) { a.className = "form-alert"; a.textContent = ""; }
     const host = $("#auth-forms");
-    const googleBtn = `<button class="oauth-btn" data-google>${I("google")}Continue with Google</button><div class="divider">or with email</div>`;
+    const googleBtn = `<button class="oauth-btn" data-google>${GOOGLE_LOGO}Continue with Google</button><div class="divider">or with email</div>`;
     if (mode === "login") {
       host.innerHTML = `
         <h3>Welcome back</h3><p class="sub">Log in to your Esto account.</p>

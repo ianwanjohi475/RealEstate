@@ -88,6 +88,7 @@
           "auth/popup-blocked":"Your browser blocked the popup. Allow popups and retry.",
           "auth/too-many-requests":"Too many attempts. Please try again shortly.",
           "auth/operation-not-allowed":"Enable Email/Password in Firebase Console → Authentication → Sign-in method.",
+          "auth/unauthorized-domain":"This domain isn't authorized. Add it in Firebase Console → Authentication → Settings → Authorized domains (add 'localhost' for local testing).",
           "auth/network-request-failed":"Network error — check your connection and retry."
         };
         const nice = (e) => new Error(map[e.code] || e.message || "Something went wrong.");
