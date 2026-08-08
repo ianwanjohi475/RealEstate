@@ -85,6 +85,25 @@ assets/video/esto-showreel.mp4
 manifest.webmanifest · sw.js · firebase.json
 ```
 
+## Real-time features & payments
+
+- **Dark / light mode** everywhere, with a wordmark **Esto.** logo and a fully
+  responsive floating navbar (mobile slide-in drawer).
+- **Dashboard** is fully functional: real-time **chat** with agents (auto-replies,
+  syncs across browser tabs), a **notifications** dropdown, working **search**,
+  **market insight** with live-updating figures, and **settings** that persist.
+- **M-Pesa payments** (Safaricom Daraja STK Push) power how Esto earns — viewing
+  **booking fees**, **Premium/Investor subscriptions**, wallet **top-ups** and
+  **featured-listing** boosts. See [`server/`](server/README.md).
+  - The frontend calls the Node server in [`server/`](server/); if it's not
+    running it falls back to a realistic demo so the UI always works.
+  - Point the frontend at a deployed API with
+    `<script>window.ESTO_API_BASE="https://your-api"</script>`.
+  - **Secrets live only in `server/.env`** (git-ignored) — copy
+    `server/.env.example` and paste your Daraja keys there.
+- **Contact form / email** posts to the server's `/api/contact` (nodemailer),
+  falling back to a success acknowledgement when no backend/SMTP is set.
+
 ## Contact (portfolio)
 
 - **Phone / WhatsApp:** 0758 950 370

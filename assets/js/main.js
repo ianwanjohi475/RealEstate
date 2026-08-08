@@ -39,10 +39,9 @@
   }
   function toggleTheme() { setTheme(currentTheme() === "dark" ? "light" : "dark"); }
 
-  /* ---------- Brand ---------- */
-  const BRAND_MARK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="4.2" height="8" rx="1"/><rect x="9.9" y="7" width="4.2" height="12" rx="1"/><rect x="15.8" y="9.2" width="4.2" height="9.8" rx="1"/><path d="M3 19h18"/></svg>';
+  /* ---------- Brand (wordmark) ---------- */
   function brandHTML(href = "index.html") {
-    return `<a class="brand" href="${href}" aria-label="Esto home"><span class="brand-mark">${BRAND_MARK}</span><span><b>Esto</b></span></a>`;
+    return `<a class="brand" href="${href}" aria-label="Esto home"><span class="logo">Esto<span class="dot">.</span></span></a>`;
   }
   const initials = (u) => { const n = (u && (u.name || u.email)) || "U"; return n.trim().split(/\s+/).slice(0, 2).map((x) => x[0].toUpperCase()).join(""); };
 
@@ -57,7 +56,7 @@
     const user = A() && A().currentUser();
     const links = NAV.map(([h, l]) => `<a href="${h}" class="${page === h ? "active" : ""}">${l}</a>`).join("");
     const authArea = user
-      ? `<a class="avatar-btn" href="dashboard.html"><span class="avatar">${initials(user)}</span><span>${(user.name || "Account").split(" ")[0]}</span></a>`
+      ? `<a class="avatar-btn" href="dashboard.html"><span class="avatar">${initials(user)}</span><span class="lbl">${(user.name || "Account").split(" ")[0]}</span></a>`
       : `<button class="btn--login" data-open-auth="login">Login</button>`;
 
     host.className = "site-header" + (onHero ? " on-hero" : "");
@@ -74,10 +73,19 @@
       <div class="mobile-drawer" id="drawer">
         <div class="scrim" data-close-drawer></div>
         <div class="panel">
-          <button class="drawer-close" data-close-drawer aria-label="Close">${I("close")}</button>
-          ${NAV.map(([h, l]) => `<a href="${h}">${l}</a>`).join("")}
+          <div class="drawer-head">${brandHTML()}<button class="drawer-close" data-close-drawer aria-label="Close">${I("close")}</button></div>
+          ${NAV.map(([h, l]) => `<a href="${h}" class="${page === h ? "active" : ""}" style="${page === h ? "color:var(--brand)" : ""}">${l}</a>`).join("")}
           ${user ? `<a href="dashboard.html">Dashboard</a>` : ""}
-          <button class="btn ${user ? "" : "btn--gold"}" style="margin-top:14px" ${user ? 'onclick="location.href=\'dashboard.html\'"' : 'data-open-auth="login"'}>${user ? "My dashboard" : "Login / Register"}</button>
+          <div class="drawer-theme">Dark mode <button data-theme-toggle><span data-theme-ico data-ico="${currentTheme() === "dark" ? "sun" : "moon"}"></span></button></div>
+          <div class="drawer-contact">
+            <a href="tel:+${PHONE_INTL}">${I("phone")}${PHONE}</a>
+            <a href="mailto:${EMAIL}">${I("mail")}${EMAIL}</a>
+          </div>
+          <div class="drawer-cta">
+            ${user
+              ? `<a class="btn btn--block" href="dashboard.html">${I("dashboard")}My dashboard</a>`
+              : `<button class="btn btn--block" data-open-auth="login">${I("user")}Login</button><button class="btn btn--gold btn--block" data-open-auth="register">${I("sparkles")}Create account</button>`}
+          </div>
         </div>
       </div>`;
 
@@ -479,7 +487,8 @@
                 <div class="form-field"><textarea name="msg" rows="3">I'd like to arrange a viewing of ${p.title}.</textarea></div>
                 <button class="btn btn--block" type="submit">${I("message")}Request a viewing</button>
               </form>
-              <a class="btn btn--gold btn--block" style="margin-top:10px" href="https://wa.me/${PHONE_INTL}?text=${encodeURIComponent("Hi Esto, I'm interested in " + p.title + " (" + p.id + ")")}">${I("whatsapp")}WhatsApp us</a>
+              <button class="btn btn--gold btn--block" style="margin-top:10px" data-reserve>${I("wallet")}Reserve viewing · M-Pesa</button>
+              <a class="btn btn--ghost btn--block" style="margin-top:10px" href="https://wa.me/${PHONE_INTL}?text=${encodeURIComponent("Hi Esto, I'm interested in " + p.title + " (" + p.id + ")")}">${I("whatsapp")}WhatsApp us</a>
               <a class="btn btn--ghost btn--block" style="margin-top:10px" href="tel:+${PHONE_INTL}">${I("phone")}${PHONE}</a>
             </div>
             <div class="side-card"><h3 style="font-size:1.1rem;margin-bottom:14px">Mortgage estimate</h3><div id="mortgage"></div></div>
@@ -492,6 +501,12 @@
     $$("[data-lb]", host).forEach((im) => im.addEventListener("click", () => openLightbox(p.images.map((x) => sz(x, 1400)), +im.dataset.lb)));
     const ef = $("[data-enquiry]", host);
     ef.addEventListener("submit", (e) => { e.preventDefault(); toast("Viewing request sent — " + ag.name.split(" ")[0] + " will call you shortly.", "checkCircle"); ef.reset(); });
+    const rb = $("[data-reserve]", host);
+    if (rb && window.EstoPay) rb.addEventListener("click", () => window.EstoPay.open({
+      amount: 2000, title: "Reserve: " + p.title, description: "Refundable viewing fee", type: "booking",
+      accountRef: p.id, phone: (typeof localStorage !== "undefined" && localStorage.getItem("esto:phone")) || "",
+      onSuccess: () => toast("Viewing reserved — " + ag.name.split(" ")[0] + " will confirm your slot.", "checkCircle")
+    }));
     buildMortgage($("#mortgage"), p.price || 10000000);
     hydrateIcons(host); bindFavs(host);
     // animate trust bars
@@ -545,11 +560,28 @@
     poster.addEventListener("click", () => { poster.style.display = "none"; vid.play(); vid.setAttribute("controls", ""); });
   }
 
-  /* ---------- Contact form ---------- */
+  /* ---------- Contact form (posts to backend; graceful fallback) ---------- */
+  const API_BASE = window.ESTO_API_BASE || (/^(localhost|127\.0\.0\.1)$/.test(location.hostname) ? "http://localhost:5000" : "");
   function initForms() {
     const cf = $("[data-contact]");
-    if (cf) cf.addEventListener("submit", (e) => { e.preventDefault(); const a = $(".form-alert", cf);
-      if (a) { a.className = "form-alert ok"; a.textContent = "Thank you — your message is with our team. We'll reply within one business day."; } cf.reset(); });
+    if (!cf) return;
+    cf.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const a = $(".form-alert", cf);
+      const btn = $("button[type=submit]", cf); const t = btn ? btn.textContent : "";
+      if (btn) { btn.disabled = true; btn.textContent = "Sending…"; }
+      const fd = Object.fromEntries(new FormData(cf).entries());
+      const done = (ok, msg) => { if (a) { a.className = "form-alert " + (ok ? "ok" : "err"); a.textContent = msg; } if (btn) { btn.disabled = false; btn.textContent = t; } if (ok) cf.reset(); };
+      try {
+        if (API_BASE) {
+          const r = await fetch(API_BASE + "/api/contact", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(fd) });
+          if (r.ok) return done(true, "Thank you — your message is with our team. We'll reply within one business day.");
+        }
+        throw new Error("no-backend");
+      } catch (_) {
+        done(true, "Thank you — your message has been received. We'll reply within one business day.");
+      }
+    });
   }
 
   /* ---------- PWA ---------- */

@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Dashboard — Esto</title>
-  <meta name="description" content="Your Esto dashboard: saved homes, viewings, market insight and account settings.">
+  <meta name="description" content="Your Esto dashboard: saved homes, real-time chat, viewings, market insight, M-Pesa payments and settings.">
   <meta name="theme-color" content="#8B1E3F">
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="assets/icons/favicon.svg" type="image/svg+xml">
@@ -17,23 +17,21 @@
 <body class="dash">
   <div class="dash-shell">
     <aside class="dash-side" id="dash-side">
-      <a class="brand" href="index.html">
-        <span class="brand-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="4.2" height="8" rx="1"/><rect x="9.9" y="7" width="4.2" height="12" rx="1"/><rect x="15.8" y="9.2" width="4.2" height="9.8" rx="1"/><path d="M3 19h18"/></svg></span>
-        <span><b>Esto</b></span>
-      </a>
+      <a class="brand" href="index.html" style="margin-bottom:30px;padding-left:8px;color:#fff"><span class="logo">Esto<span class="dot" style="color:var(--gold-300)">.</span></span></a>
       <nav class="dash-nav" id="dash-nav">
         <a href="#overview" class="active" data-tab="overview"><span data-ico="dashboard"></span>Overview</a>
         <a href="#saved" data-tab="saved"><span data-ico="bookmark"></span>Saved homes</a>
+        <a href="#messages" data-tab="messages"><span data-ico="message"></span>Messages<span class="chat-badge" id="chat-badge" style="margin-left:auto;background:var(--gold);color:var(--brand-700);font-size:.7rem;font-weight:800;padding:2px 8px;border-radius:999px;display:none"></span></a>
         <a href="#viewings" data-tab="viewings"><span data-ico="calendar"></span>Viewings</a>
         <a href="#market" data-tab="market"><span data-ico="trendUp"></span>Market insight</a>
-        <a href="#messages" data-tab="messages"><span data-ico="message"></span>Messages</a>
+        <a href="#payments" data-tab="payments"><span data-ico="wallet"></span>Payments</a>
         <a href="#settings" data-tab="settings"><span data-ico="settings"></span>Settings</a>
       </nav>
       <div class="side-card-mini">
         <span data-ico="sparkles"></span>
         <b style="display:block;margin-bottom:4px">Go Premium</b>
-        <small style="color:rgba(255,255,255,.7);display:block;margin-bottom:12px">Unlock full market analytics &amp; alerts.</small>
-        <a class="btn btn--gold btn--sm btn--block" href="contact.html">Upgrade</a>
+        <small style="color:rgba(255,255,255,.7);display:block;margin-bottom:12px">Unlock full analytics, alerts &amp; priority viewings.</small>
+        <button class="btn btn--gold btn--sm btn--block" id="go-premium">Upgrade via M-Pesa</button>
       </div>
       <div class="side-foot">
         <a href="properties.html" class="dash-nav"><span style="display:flex;align-items:center;gap:13px;padding:13px 16px"><span data-ico="search"></span>Browse homes</span></a>
@@ -50,7 +48,14 @@
         <div style="display:flex;align-items:center;gap:12px">
           <div class="dash-search"><span data-ico="search"></span><input placeholder="Search homes, areas…" id="dash-search-input"></div>
           <button class="dash-icon-btn" data-theme-toggle aria-label="Theme"><span data-theme-ico data-ico="moon"></span></button>
-          <button class="dash-icon-btn" aria-label="Notifications"><span data-ico="bell"></span><span class="dot"></span></button>
+          <div style="position:relative">
+            <button class="dash-icon-btn" id="notif-btn" aria-label="Notifications"><span data-ico="bell"></span><span class="dot" id="notif-dot" style="display:none"></span></button>
+            <div class="dropdown" id="notif-dd">
+              <div class="dropdown__head"><b>Notifications</b><button id="notif-read">Mark all read</button></div>
+              <div class="notif-list" id="notif-list"></div>
+              <div class="dropdown__foot"><a href="#" data-tab-link="messages">Open messages</a></div>
+            </div>
+          </div>
           <button class="avatar-btn"><span class="avatar" id="dash-avatar">U</span></button>
         </div>
       </div>
@@ -62,6 +67,8 @@
   <script src="assets/js/auth.js"></script>
   <script src="assets/js/data.js"></script>
   <script src="assets/js/icons.js"></script>
+  <script src="assets/js/realtime.js"></script>
+  <script src="assets/js/mpesa.js"></script>
   <script src="assets/js/main.js"></script>
   <script>
     (function () {
@@ -70,6 +77,8 @@
       const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
       const hy = window.EstoUI.hydrateIcons;
       const A = () => window.EstoAuth;
+      const fmt = (n) => "KES " + Number(n).toLocaleString("en-KE");
+      const timeAgo = (t) => { const s = (Date.now() - t) / 1000; if (s < 60) return "just now"; if (s < 3600) return Math.floor(s / 60) + "m"; if (s < 86400) return Math.floor(s / 3600) + "h"; return Math.floor(s / 86400) + "d"; };
 
       A().requireAuth("index.html?auth=login");
 
@@ -77,156 +86,217 @@
       const firstName = () => (user().name || "there").split(" ")[0];
       const initials = () => { const n = user().name || "U"; return n.trim().split(/\s+/).slice(0,2).map(x=>x[0].toUpperCase()).join(""); };
       const savedProps = () => D.PROPERTIES.filter(p => window.EstoFavs.get().includes(p.id));
+      let activeThread = null;
 
-      function sparkline(pts, color){
-        const w=100,h=40,max=Math.max(...pts),min=Math.min(...pts);
-        const d=pts.map((v,i)=>`${(i/(pts.length-1))*w},${h-((v-min)/((max-min)||1))*(h-6)-3}`).join(" ");
-        return `<svg class="spark" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none"><polyline points="${d}" fill="none" stroke="${color}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
-      }
-      function donut(segs){
-        let acc=0; const total=segs.reduce((s,x)=>s+x.v,0)||1;
-        const stops=segs.map(s=>{const a=acc/total*360,b=(acc+=s.v)/total*360;return `${s.c} ${a}deg ${b}deg`;}).join(",");
-        return `background:conic-gradient(${stops})`;
-      }
+      function sparkline(pts, color){ const w=100,h=40,max=Math.max(...pts),min=Math.min(...pts); const d=pts.map((v,i)=>`${(i/(pts.length-1))*w},${h-((v-min)/((max-min)||1))*(h-6)-3}`).join(" "); return `<svg class="spark" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none"><polyline points="${d}" fill="none" stroke="${color}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`; }
+      function donut(segs){ let acc=0; const total=segs.reduce((s,x)=>s+x.v,0)||1; const stops=segs.map(s=>{const a=acc/total*360,b=(acc+=s.v)/total*360;return `${s.c} ${a}deg ${b}deg`;}).join(","); return `background:conic-gradient(${stops})`; }
 
+      /* ---------- OVERVIEW ---------- */
       function overview(){
         const saved=savedProps();
-        const avgTrust = saved.length ? Math.round(saved.reduce((s,p)=>s+p.trust.overall,0)/saved.length) : 96;
-        const kpis=[
-          ["bookmark","g",saved.length,"Saved homes","+"+saved.length,[3,5,4,6,saved.length||2,saved.length||3,saved.length||4],"var(--brand)"],
+        const avgTrust=saved.length?Math.round(saved.reduce((s,p)=>s+p.trust.overall,0)/saved.length):96;
+        const kpis=[["bookmark","g",saved.length,"Saved homes","+"+saved.length,[3,5,4,6,saved.length||2,saved.length||3,saved.length||4],"var(--brand)"],
           ["calendar","y",3,"Upcoming viewings","2 this week",[1,2,1,3,2,3,3],"var(--gold)"],
           ["eye","b",148,"Listings viewed","+12%",[80,95,110,120,132,140,148],"#3178b4"],
-          ["shieldCheck","p",avgTrust,"Avg. TrustScore","Great",[92,93,94,95,95,96,avgTrust],"#9333b4"]
-        ];
+          ["shieldCheck","p",avgTrust,"Avg. TrustScore","Great",[92,93,94,95,95,96,avgTrust],"#9333b4"]];
         const bars=[["Karen",42],["Kilimani",68],["Westlands",55],["Lavington",37],["Runda",24],["Kileleshwa",31]];
         const maxBar=Math.max(...bars.map(b=>b[1]));
         const segs=[{n:"Villas",v:4,c:"var(--brand)"},{n:"Apartments",v:6,c:"var(--gold)"},{n:"Townhouses",v:3,c:"#3178b4"},{n:"Land",v:2,c:"#9333b4"}];
         const recs=D.PROPERTIES.filter(p=>p.featured).slice(0,4);
         return `
-          <div class="kpi-grid">
-            ${kpis.map(([ic,c,v,l,t,sp,col])=>`
-              <div class="kpi reveal"><span class="trend">${I("trendUp")}${t}</span>
-                <div class="kpi__ico ${c}">${I(ic)}</div><b data-count="${v}">0</b><small>${l}</small>${sparkline(sp,col)}</div>`).join("")}
-          </div>
+          <div class="kpi-grid">${kpis.map(([ic,c,v,l,t,sp,col])=>`<div class="kpi reveal"><span class="trend">${I("trendUp")}${t}</span><div class="kpi__ico ${c}">${I(ic)}</div><b data-count="${v}">0</b><small>${l}</small>${sparkline(sp,col)}</div>`).join("")}</div>
           <div class="dash-cols">
-            <div class="panel reveal">
-              <div class="panel__head"><h3>Listings viewed by area</h3><span class="badge">Last 30 days</span></div>
-              <div class="chart-box" id="chart">${bars.map(([n,v])=>`<div class="bar" data-h="${Math.round(v/maxBar*100)}"><span>${v}</span><small>${n.slice(0,4)}</small></div>`).join("")}</div>
-            </div>
-            <div class="panel reveal">
-              <div class="panel__head"><h3>Your search mix</h3></div>
+            <div class="panel reveal"><div class="panel__head"><h3>Listings viewed by area</h3><span class="badge">Last 30 days</span></div>
+              <div class="chart-box">${bars.map(([n,v])=>`<div class="bar" data-h="${Math.round(v/maxBar*100)}"><span>${v}</span><small>${n.slice(0,4)}</small></div>`).join("")}</div></div>
+            <div class="panel reveal"><div class="panel__head"><h3>Your search mix</h3></div>
               <div class="donut" style="${donut(segs)}"><div class="d-center"><b>${segs.reduce((s,x)=>s+x.v,0)}</b><small>homes tracked</small></div></div>
-              <ul class="legend">${segs.map(s=>`<li><span class="sw" style="background:${s.c}"></span>${s.n}<span class="lv">${s.v}</span></li>`).join("")}</ul>
-            </div>
+              <ul class="legend">${segs.map(s=>`<li><span class="sw" style="background:${s.c}"></span>${s.n}<span class="lv">${s.v}</span></li>`).join("")}</ul></div>
           </div>
           <div class="dash-cols" style="margin-top:24px">
-            <div class="panel reveal">
-              <div class="panel__head"><h3>Recommended for you</h3><a class="btn btn--ghost btn--sm" href="properties.html">Browse all ${I("arrowRight")}</a></div>
-              <div class="mini-list">${recs.map(p=>`<a class="mini-item" href="property.html?id=${p.id}"><img src="${D.sized(p.images[0],200)}" alt=""><div class="mi-body"><b>${p.title}</b><small>${p.address} · Trust ${p.trust.overall}</small></div><span class="mi-price">${D.fmtPrice(p.price)}${p.per||""}</span></a>`).join("")}</div>
-            </div>
-            <div class="panel reveal">
-              <div class="panel__head"><h3>Recent activity</h3></div>
-              <ul class="activity">
-                <li><span class="act-dot">${I("verified")}</span><div class="act-body"><b>New verified listing in Kilimani</b><small>Sky Villa Penthouse · Trust 94 · 2h ago</small></div></li>
-                <li><span class="act-dot">${I("calendar")}</span><div class="act-body"><b>Viewing confirmed</b><small>Karen villa · Sat 10:00am</small></div></li>
-                <li><span class="act-dot">${I("bookmark")}</span><div class="act-body"><b>Home saved</b><small>Lavington townhouse · yesterday</small></div></li>
-                <li><span class="act-dot">${I("message")}</span><div class="act-body"><b>Wanjiru replied to your enquiry</b><small>2 days ago</small></div></li>
-              </ul>
-            </div>
+            <div class="panel reveal"><div class="panel__head"><h3>Recommended for you</h3><a class="btn btn--ghost btn--sm" href="properties.html">Browse all ${I("arrowRight")}</a></div>
+              <div class="mini-list" id="rec-list">${recs.map(recRow).join("")}</div></div>
+            <div class="panel reveal"><div class="panel__head"><h3>Recent activity</h3></div><ul class="activity" id="act-list"></ul></div>
           </div>`;
       }
-      function savedView(){
-        const saved=savedProps();
-        if(!saved.length) return empty("bookmark","No saved homes yet","Tap the heart on any listing to save it here.","properties.html","Browse homes");
-        return `<div class="cards-grid">${saved.map(p=>window.EstoUI.propCard(p)).join("")}</div>`;
+      function recRow(p){ return `<a class="mini-item" href="property.html?id=${p.id}"><img src="${D.sized(p.images[0],200)}" alt=""><div class="mi-body"><b>${p.title}</b><small>${p.address} · Trust ${p.trust.overall}</small></div><span class="mi-price">${D.fmtPrice(p.price)}${p.per||""}</span></a>`; }
+
+      /* ---------- SAVED ---------- */
+      function savedView(){ const s=savedProps(); return s.length?`<div class="cards-grid">${s.map(p=>window.EstoUI.propCard(p)).join("")}</div>`:empty("bookmark","No saved homes yet","Tap the heart on any listing to save it here.","properties.html","Browse homes"); }
+
+      /* ---------- MESSAGES (real-time chat) ---------- */
+      function messagesView(){
+        return `<div class="chat-shell ${activeThread?'':'show-list'}" id="chat-shell">
+          <div class="chat-list">
+            <div class="chat-search"><input placeholder="Search conversations…" id="chat-search"></div>
+            <div id="thread-list"></div>
+          </div>
+          <div class="chat-main" id="chat-main"></div>
+        </div>`;
       }
+      function renderThreads(){
+        const host=$("#thread-list"); if(!host) return;
+        const q=($("#chat-search")?.value||"").toLowerCase();
+        const threads=window.EstoChat.threads().filter(t=>t.agent.name.toLowerCase().includes(q));
+        host.innerHTML=threads.map(t=>`<div class="chat-thread-item ${activeThread===t.agent.id?'active':''}" data-thread="${t.agent.id}">
+          <img src="${D.sized(t.agent.photo,120)}" alt=""><div class="ct-body"><b>${t.agent.name.split(" ")[0]} ${t.agent.name.split(" ")[1]||""}<time>${t.last?timeAgo(t.last.at):""}</time></b><small>${t.last?(t.last.from==='me'?'You: ':'')+t.last.text:t.agent.role}</small></div>${t.unread?'<span class="unread-dot"></span>':''}</div>`).join("");
+        hy(host);
+        $$("[data-thread]",host).forEach(el=>el.addEventListener("click",()=>openThread(el.dataset.thread)));
+      }
+      function openThread(id){ activeThread=id; window.EstoChat.markRead(id); const sh=$("#chat-shell"); if(sh) sh.classList.remove("show-list"); renderThreads(); renderChatMain(); }
+      function renderChatMain(){
+        const host=$("#chat-main"); if(!host) return;
+        if(!activeThread){ host.innerHTML=`<div class="chat-empty"><div><div style="width:64px;height:64px;border-radius:18px;background:var(--brand-050);color:var(--brand);display:grid;place-items:center;margin:0 auto 14px">${I("message")}</div><h3>Your conversations</h3><p style="color:var(--muted);margin-top:6px">Select an agent to start chatting in real time.</p></div></div>`; hy(host); return; }
+        const ag=D.agentBy(activeThread); const msgs=window.EstoChat.messages(activeThread);
+        host.innerHTML=`
+          <div class="chat-top"><button class="dash-icon-btn" id="chat-back" style="display:none">${I("chevronRight")}</button><img src="${D.sized(ag.photo,120)}" alt=""><div><b>${ag.name}</b><div style="color:var(--muted);font-size:.82rem"><span class="online"></span> Online · ${ag.role}</div></div><a class="btn btn--ghost btn--sm" style="margin-left:auto" href="tel:+254758950370">${I("phone")}Call</a></div>
+          <div class="chat-messages" id="chat-msgs">${msgs.map(msgHTML).join("")}</div>
+          <form class="chat-compose" id="chat-form"><input id="chat-input" placeholder="Type a message…" autocomplete="off"><button type="submit" aria-label="Send">${I("arrowRight")}</button></form>`;
+        hy(host);
+        const back=$("#chat-back"); if(back){ back.style.transform="rotate(180deg)"; back.style.display=window.innerWidth<=1024?"grid":"none"; back.addEventListener("click",()=>{activeThread=null;$("#chat-shell").classList.add("show-list");renderThreads();renderChatMain();}); }
+        const msgsEl=$("#chat-msgs"); msgsEl.scrollTop=msgsEl.scrollHeight;
+        $("#chat-form").addEventListener("submit",e=>{e.preventDefault();const v=$("#chat-input").value.trim();if(!v)return;window.EstoChat.send(activeThread,v);$("#chat-input").value="";});
+      }
+      function msgHTML(m){ return `<div class="msg ${m.from==='me'?'me':'them'}">${m.text}<time>${new Date(m.at).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}</time></div>`; }
+
+      /* ---------- VIEWINGS ---------- */
       function viewingsView(){
         const rows=[["Ambassadorial 5-Bed Villa","Karen","Sat, 09 Aug · 10:00am","Wanjiru Kamau","active","Confirmed"],
           ["Sky Villa Penthouse","Kilimani","Mon, 11 Aug · 2:00pm","Brian Otieno","pending","Pending"],
           ["Garden 3-Bed Maisonette","Kileleshwa","Wed, 13 Aug · 11:30am","Aisha Mohamed","active","Confirmed"]];
-        return `<div class="panel"><div class="panel__head"><h3>Your viewings</h3><a class="btn btn--sm" href="properties.html">${I("plus")}Book a viewing</a></div>
+        return `<div class="panel"><div class="panel__head"><h3>Your viewings</h3><button class="btn btn--sm" id="book-viewing">${I("plus")}Book &amp; reserve</button></div>
+          <p style="color:var(--muted);margin:-8px 0 16px;font-size:.92rem">Reserve a slot by paying a small refundable booking fee via M-Pesa.</p>
           <div style="overflow-x:auto"><table class="data-table"><thead><tr><th>Property</th><th>Area</th><th>When</th><th>Agent</th><th>Status</th></tr></thead>
           <tbody>${rows.map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td><td>${r[3]}</td><td><span class="status-pill ${r[4]}">${r[5]}</span></td></tr>`).join("")}</tbody></table></div></div>`;
       }
+
+      /* ---------- MARKET ---------- */
       function marketView(){
         const areas=[["Karen","KES 92M","+6.2%","up"],["Kilimani","KES 46M","+4.1%","up"],["Westlands","KES 39M","+3.4%","up"],["Runda","KES 135M","+2.0%","up"],["Lavington","KES 58M","-1.2%","down"],["Syokimau","KES 6.9M","+8.5%","up"]];
         const bars=[["Q1",4.1],["Q2",4.6],["Q3",5.0],["Q4",5.4],["Q1",5.9],["Q2",6.2]];const maxb=Math.max(...bars.map(b=>b[1]));
-        return `
-          <div class="kpi-grid">
-            <div class="kpi"><div class="kpi__ico g">${I("trendUp")}</div><b>+5.4%</b><small>Avg. price growth (YoY)</small></div>
+        return `<div class="kpi-grid">
+            <div class="kpi"><div class="kpi__ico g">${I("trendUp")}</div><b id="live-growth">+5.4%</b><small>Avg. price growth (YoY)</small></div>
             <div class="kpi"><div class="kpi__ico y">${I("clock")}</div><b>34</b><small>Avg. days to sell</small></div>
-            <div class="kpi"><div class="kpi__ico b">${I("gauge")}</div><b>7.8%</b><small>Avg. rental yield</small></div>
-            <div class="kpi"><div class="kpi__ico p">${I("coins")}</div><b>1,204</b><small>Active verified listings</small></div>
-          </div>
+            <div class="kpi"><div class="kpi__ico b">${I("gauge")}</div><b id="live-yield">7.8%</b><small>Avg. rental yield</small></div>
+            <div class="kpi"><div class="kpi__ico p">${I("coins")}</div><b id="live-active">1,204</b><small>Active verified listings</small></div></div>
           <div class="dash-cols">
-            <div class="panel"><div class="panel__head"><h3>Median price growth</h3><span class="badge">% YoY</span></div>
+            <div class="panel"><div class="panel__head"><h3>Median price growth</h3><span class="badge" style="background:rgba(46,158,107,.14);color:var(--ok)"><span class="online" style="width:7px;height:7px;border-radius:50%;background:var(--ok);display:inline-block;margin-right:5px"></span>Live</span></div>
               <div class="chart-box">${bars.map(([n,v])=>`<div class="bar" data-h="${Math.round(v/maxb*100)}"><span>${v}%</span><small>${n}</small></div>`).join("")}</div></div>
-            <div class="panel"><div class="panel__head"><h3>Hotspots</h3></div>
-              <div style="overflow-x:auto"><table class="data-table"><thead><tr><th>Area</th><th>Median</th><th>YoY</th></tr></thead>
-              <tbody>${areas.map(a=>`<tr><td>${a[0]}</td><td>${a[1]}</td><td style="color:${a[3]==='up'?'var(--ok)':'var(--danger)'}">${a[2]}</td></tr>`).join("")}</tbody></table></div></div>
-          </div>`;
+            <div class="panel"><div class="panel__head"><h3>Hotspots</h3></div><div style="overflow-x:auto"><table class="data-table"><thead><tr><th>Area</th><th>Median</th><th>YoY</th></tr></thead>
+              <tbody>${areas.map(a=>`<tr><td>${a[0]}</td><td>${a[1]}</td><td style="color:${a[3]==='up'?'var(--ok)':'var(--danger)'}">${a[2]}</td></tr>`).join("")}</tbody></table></div></div></div>`;
       }
-      function messagesView(){
-        const msgs=[["Wanjiru Kamau","Happy to arrange the Karen viewing this Saturday at 10am — does that work?","2h",3777931],
-          ["Brian Otieno","The Kilimani penthouse title is verified and ready. Shall I hold it for you?","1d",2379005],
-          ["Aisha Mohamed","Sent over three more Kileleshwa options within your budget.","3d",1181686]];
-        return `<div class="panel"><div class="panel__head"><h3>Messages</h3></div><div class="mini-list">${msgs.map(m=>`<div class="mini-item"><img src="${D.px(m[3]).replace('w=1200','w=120')}" alt=""><div class="mi-body"><b>${m[0]}</b><small style="white-space:normal">${m[1]}</small></div><small style="color:var(--muted)">${m[2]}</small></div>`).join("")}</div></div>`;
-      }
-      function settingsView(){
-        const u=user();
-        return `<div class="dash-cols">
-          <div class="panel"><div class="panel__head"><h3>Profile</h3></div>
-            <form id="profile-form">
-              <div class="form-field"><label>Full name</label><input class="inp" id="p-name" value="${u.name||''}"></div>
-              <div class="form-field"><label>Email</label><input class="inp" value="${u.email||''}" disabled></div>
-              <div class="form-field"><label>Phone</label><input class="inp" placeholder="07xx xxx xxx"></div>
-              <button class="btn" type="submit">Save changes</button></form></div>
-          <div class="panel"><div class="panel__head"><h3>Preferences</h3></div>
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px"><span style="font-weight:600">Dark mode</span>
-              <button class="btn btn--ghost btn--sm" id="theme-switch"><span data-theme-ico data-ico="moon"></span><span id="theme-label">Light</span></button></div>
-            <label class="check-row" style="margin-bottom:16px"><input type="checkbox" checked> Email me new verified listings</label>
-            <label class="check-row" style="margin-bottom:16px"><input type="checkbox" checked> WhatsApp viewing reminders</label>
-            <label class="check-row" style="margin-bottom:16px"><input type="checkbox"> Weekly market report</label>
-            <div style="border-top:1px solid var(--line-2);margin-top:8px;padding-top:16px">
-              <p style="color:var(--muted);font-size:.9rem;margin-bottom:12px">Signed in via <b>${A().mode==='firebase'?'Firebase':'demo mode'}</b>.</p>
-              <button class="btn btn--ghost" id="settings-logout">${I("logout")}Sign out</button></div></div>
+
+      /* ---------- PAYMENTS ---------- */
+      function paymentsView(){
+        const txns=window.EstoWallet.list();
+        const plans=[["Starter","0","Save homes","Basic search","Email alerts",false],
+          ["Premium","1,500","Everything in Starter","Full market analytics","Priority viewings","Verified badge",true],
+          ["Investor","4,900","Everything in Premium","Yield &amp; ROI tools","Dedicated advisor",false]];
+        return `<div class="dash-cols" style="grid-template-columns:1fr 1.4fr;align-items:start">
+          <div style="display:flex;flex-direction:column;gap:20px">
+            <div class="wallet-card"><div class="wc-lab">Esto wallet balance</div><div class="wc-bal">${fmt(Math.max(0,-window.EstoWallet.balance()))}</div>
+              <div style="display:flex;gap:10px"><button class="btn btn--gold btn--sm" id="topup">${I("plus")}Top up</button><button class="btn btn--outline-light btn--sm" id="pay-fee">Pay booking fee</button></div></div>
+            <div class="panel"><div class="panel__head"><h3>How Esto earns</h3></div>
+              <ul class="activity">
+                <li><span class="act-dot">${I("calendar")}</span><div class="act-body"><b>Booking fees</b><small>Small refundable viewing reservations via M-Pesa</small></div></li>
+                <li><span class="act-dot">${I("sparkles")}</span><div class="act-body"><b>Premium subscriptions</b><small>Analytics, alerts &amp; priority access</small></div></li>
+                <li><span class="act-dot">${I("trendUp")}</span><div class="act-body"><b>Featured listings</b><small>Sellers boost visibility for a fee</small></div></li>
+              </ul></div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:20px">
+            <div class="panel"><div class="panel__head"><h3>Choose a plan</h3></div>
+              <div class="plan-grid">${plans.map(p=>{const feats=p.slice(2,-1);return `<div class="plan ${p[p.length-1]?'featured':''}"><h4>${p[0]}</h4><div class="price">${p[1]==='0'?'Free':'KES '+p[1]}<span style="font-size:.4em;color:var(--muted)">${p[1]==='0'?'':'/mo'}</span></div><ul>${feats.map(f=>`<li>${I("check")}${f}</li>`).join("")}</ul><button class="btn ${p[p.length-1]?'':'btn--ghost'} btn--block btn--sm" data-plan="${p[0]}" data-price="${p[1].replace(/,/g,'')}">${p[1]==='0'?'Current':'Subscribe'}</button></div>`;}).join("")}</div></div>
+            <div class="panel"><div class="panel__head"><h3>Transactions</h3></div>
+              ${txns.length?txns.map(t=>`<div class="txn"><div class="t-ico ${t.dir}">${I(t.dir==='in'?'download':'coins')}</div><div class="t-body"><b>${t.title}</b><small>${new Date(t.at).toLocaleString()} · ${t.ref}</small></div><span class="t-amt ${t.dir}">${t.dir==='in'?'+':'-'}${fmt(t.amount)}</span></div>`).join(""):`<p style="color:var(--muted);text-align:center;padding:20px">No transactions yet. Top up or subscribe to get started.</p>`}
+            </div>
+          </div>
         </div>`;
       }
-      function empty(ic,t,s,href,cta){
-        return `<div class="panel" style="text-align:center;padding:60px 24px"><div style="width:64px;height:64px;margin:0 auto 16px;border-radius:16px;background:var(--brand-050);color:var(--brand);display:grid;place-items:center">${I(ic)}</div><h3 style="margin-bottom:8px">${t}</h3><p style="color:var(--muted);margin-bottom:20px">${s}</p><a class="btn" href="${href}">${cta}</a></div>`;
+
+      /* ---------- SETTINGS ---------- */
+      function settingsView(){
+        const u=user(); const prefs=JSON.parse(localStorage.getItem("esto:prefs")||'{"listings":true,"whatsapp":true,"market":false}');
+        return `<div class="dash-cols">
+          <div class="panel"><div class="panel__head"><h3>Profile</h3></div>
+            <form id="profile-form"><div class="form-field"><label>Full name</label><input class="inp" id="p-name" value="${u.name||''}"></div>
+              <div class="form-field"><label>Email</label><input class="inp" value="${u.email||''}" disabled></div>
+              <div class="form-field"><label>Phone (M-Pesa)</label><input class="inp" id="p-phone" value="${localStorage.getItem('esto:phone')||''}" placeholder="07xx xxx xxx"></div>
+              <button class="btn" type="submit">Save changes</button></form></div>
+          <div class="panel"><div class="panel__head"><h3>Preferences</h3></div>
+            <div class="drawer-theme" style="margin:0 0 16px"><span>Dark mode</span><button id="theme-switch"><span data-theme-ico data-ico="moon"></span></button></div>
+            <label class="check-row" style="margin-bottom:16px"><input type="checkbox" data-pref="listings" ${prefs.listings?'checked':''}> Email me new verified listings</label>
+            <label class="check-row" style="margin-bottom:16px"><input type="checkbox" data-pref="whatsapp" ${prefs.whatsapp?'checked':''}> WhatsApp viewing reminders</label>
+            <label class="check-row" style="margin-bottom:16px"><input type="checkbox" data-pref="market" ${prefs.market?'checked':''}> Weekly market report</label>
+            <div style="border-top:1px solid var(--line-2);margin-top:8px;padding-top:16px">
+              <p style="color:var(--muted);font-size:.9rem;margin-bottom:12px">Signed in via <b>${A().mode==='firebase'?'Firebase':'demo mode'}</b>.</p>
+              <button class="btn btn--ghost" id="settings-logout">${I("logout")}Sign out</button></div></div></div>`;
       }
+      function empty(ic,t,s,href,cta){ return `<div class="panel" style="text-align:center;padding:60px 24px"><div style="width:64px;height:64px;margin:0 auto 16px;border-radius:16px;background:var(--brand-050);color:var(--brand);display:grid;place-items:center">${I(ic)}</div><h3 style="margin-bottom:8px">${t}</h3><p style="color:var(--muted);margin-bottom:20px">${s}</p><a class="btn" href="${href}">${cta}</a></div>`; }
 
-      const VIEWS={overview,saved:savedView,viewings:viewingsView,market:marketView,messages:messagesView,settings:settingsView};
-      const TITLES={overview:"Overview",saved:"Saved homes",viewings:"Viewings",market:"Market insight",messages:"Messages",settings:"Settings"};
+      const VIEWS={overview,saved:savedView,messages:messagesView,viewings:viewingsView,market:marketView,payments:paymentsView,settings:settingsView};
+      const TITLES={overview:"Overview",saved:"Saved homes",messages:"Messages",viewings:"Viewings",market:"Market insight",payments:"Payments & earnings",settings:"Settings"};
 
-      function renderTab(tab){
-        const content=$("#dash-content"); content.innerHTML=(VIEWS[tab]||overview)();
-        $("#dash-title").textContent=TITLES[tab]||"Overview";
+      function afterRender(tab){
+        const content=$("#dash-content");
         hy(content); window.EstoUI.bindFavs(content);
-        requestAnimationFrame(()=>{
-          $$(".bar",content).forEach(b=>b.style.height=b.dataset.h+"%");
+        requestAnimationFrame(()=>{ $$(".bar",content).forEach(b=>b.style.height=b.dataset.h+"%");
           $$("[data-count]",content).forEach(el=>{const target=+el.dataset.count;let n=0;const step=()=>{n+=Math.ceil(target/24);if(n>=target){el.textContent=target;return;}el.textContent=n;requestAnimationFrame(step);};step();});
-          $$(".reveal",content).forEach(r=>r.classList.add("in"));
-        });
-        const pf=$("#profile-form",content);
-        if(pf)pf.addEventListener("submit",async e=>{e.preventDefault();try{await A().updateName($("#p-name").value.trim());paintUser();window.EstoToast("Profile updated","checkCircle");}catch(err){window.EstoToast(err.message,"close");}});
-        const sl=$("#settings-logout",content); if(sl)sl.addEventListener("click",doLogout);
-        const ts=$("#theme-switch",content);
-        if(ts){const setLbl=()=>{const dark=document.documentElement.getAttribute("data-theme")==="dark";$("#theme-label",content).textContent=dark?"Dark":"Light";};setLbl();
-          ts.addEventListener("click",()=>{const dark=document.documentElement.getAttribute("data-theme")==="dark";document.documentElement.setAttribute("data-theme",dark?"light":"dark");try{localStorage.setItem("esto:theme",dark?"light":"dark");}catch(e){}$$("[data-theme-ico]").forEach(el=>{el.dataset.ico=dark?"moon":"sun";el.dataset.done="";hy(el.parentElement);});setLbl();});}
+          $$(".reveal",content).forEach(r=>r.classList.add("in")); });
+        if(tab==="overview") renderActivity();
+        if(tab==="messages"){ renderThreads(); renderChatMain(); const cs=$("#chat-search"); if(cs)cs.addEventListener("input",renderThreads); }
+        if(tab==="viewings"){ $("#book-viewing").addEventListener("click",()=>window.EstoPay.open({amount:2000,title:"Viewing booking fee",description:"Refundable reservation",type:"booking",accountRef:"Viewing",phone:localStorage.getItem("esto:phone")})); }
+        if(tab==="market") startLiveMarket();
+        if(tab==="payments"){
+          $("#topup").addEventListener("click",()=>window.EstoPay.open({amount:5000,title:"Wallet top-up",type:"topup",accountRef:"Wallet",phone:localStorage.getItem("esto:phone"),onSuccess:()=>go("payments")}));
+          $("#pay-fee").addEventListener("click",()=>window.EstoPay.open({amount:2000,title:"Viewing booking fee",type:"booking",accountRef:"Viewing",phone:localStorage.getItem("esto:phone"),onSuccess:()=>go("payments")}));
+          $$("[data-plan]").forEach(b=>b.addEventListener("click",()=>{const price=+b.dataset.price;if(!price)return;window.EstoPay.open({amount:price,title:b.dataset.plan+" plan",description:"Monthly subscription",type:"subscription",accountRef:b.dataset.plan,phone:localStorage.getItem("esto:phone"),onSuccess:()=>go("payments")});}));
+        }
+        if(tab==="settings"){
+          const pf=$("#profile-form"); if(pf)pf.addEventListener("submit",async e=>{e.preventDefault();try{await A().updateName($("#p-name").value.trim());}catch(err){} localStorage.setItem("esto:phone",$("#p-phone").value.trim());paintUser();window.EstoToast("Profile saved","checkCircle");});
+          $$("[data-pref]").forEach(c=>c.addEventListener("change",()=>{const prefs={};$$("[data-pref]").forEach(x=>prefs[x.dataset.pref]=x.checked);localStorage.setItem("esto:prefs",JSON.stringify(prefs));window.EstoToast("Preferences updated","check");}));
+          const sl=$("#settings-logout"); if(sl)sl.addEventListener("click",doLogout);
+          const ts=$("#theme-switch"); if(ts)ts.addEventListener("click",toggleTheme);
+        }
       }
-      function setActive(tab){$$("#dash-nav a").forEach(a=>a.classList.toggle("active",a.dataset.tab===tab));}
-      function go(tab){if(!VIEWS[tab])tab="overview";setActive(tab);renderTab(tab);history.replaceState(null,"","#"+tab);$("#dash-side").classList.remove("open");}
-      $$("#dash-nav a").forEach(a=>a.addEventListener("click",e=>{e.preventDefault();go(a.dataset.tab);}));
+      function renderActivity(){ const host=$("#act-list"); if(!host)return; const items=window.EstoNotify.list().slice(0,5);
+        host.innerHTML=items.map(n=>`<li><span class="act-dot">${I(n.ico||'bell')}</span><div class="act-body"><b>${n.title}</b><small>${n.body} · ${timeAgo(n.at)}</small></div></li>`).join(""); hy(host); }
 
+      let liveTimer=null;
+      function startLiveMarket(){ clearInterval(liveTimer); liveTimer=setInterval(()=>{ const a=$("#live-active"),y=$("#live-yield"),g=$("#live-growth"); if(!a){clearInterval(liveTimer);return;} const base=1204+Math.floor(Math.random()*9); a.textContent=base.toLocaleString(); y.textContent=(7.6+Math.random()*0.5).toFixed(1)+"%"; g.textContent="+"+(5.2+Math.random()*0.5).toFixed(1)+"%"; },3000); }
+
+      function renderTab(tab){ const content=$("#dash-content"); content.innerHTML=(VIEWS[tab]||overview)(); $("#dash-title").textContent=TITLES[tab]||"Overview"; afterRender(tab); }
+      function setActive(tab){$$("#dash-nav a[data-tab]").forEach(a=>a.classList.toggle("active",a.dataset.tab===tab));}
+      function go(tab){ if(!VIEWS[tab])tab="overview"; if(liveTimer)clearInterval(liveTimer); setActive(tab); renderTab(tab); history.replaceState(null,"","#"+tab); $("#dash-side").classList.remove("open"); }
+      $$("#dash-nav a[data-tab]").forEach(a=>a.addEventListener("click",e=>{e.preventDefault();go(a.dataset.tab);}));
+      $$("[data-tab-link]").forEach(a=>a.addEventListener("click",e=>{e.preventDefault();closeNotif();go(a.dataset.tabLink);}));
+
+      /* theme */
+      function toggleTheme(){ const dark=document.documentElement.getAttribute("data-theme")==="dark"; const nt=dark?"light":"dark"; document.documentElement.setAttribute("data-theme",nt); try{localStorage.setItem("esto:theme",nt);}catch(e){} $$("[data-theme-ico]").forEach(el=>{el.dataset.ico=nt==="dark"?"sun":"moon";el.dataset.done="";hy(el.parentElement);}); const m=$('meta[name="theme-color"]'); if(m)m.setAttribute("content",nt==="dark"?"#120c16":"#8B1E3F"); }
+      $$("[data-theme-toggle]").forEach(b=>b.addEventListener("click",toggleTheme));
+
+      /* notifications */
+      const notifDD=$("#notif-dd");
+      function renderNotifs(){ const list=window.EstoNotify.list(); $("#notif-list").innerHTML=list.length?list.map(n=>`<div class="notif ${n.read?'':'unread'}"><div class="n-ico">${I(n.ico||'bell')}</div><div><b>${n.title}</b><small>${n.body}</small><time>${timeAgo(n.at)} ago</time></div></div>`).join(""):`<div style="padding:30px;text-align:center;color:var(--muted)">No notifications</div>`; hy($("#notif-list")); const u=window.EstoNotify.unread(); $("#notif-dot").style.display=u?"block":"none"; const cb=$("#chat-badge"); }
+      function closeNotif(){ notifDD.classList.remove("open"); }
+      $("#notif-btn").addEventListener("click",e=>{e.stopPropagation();notifDD.classList.toggle("open");renderNotifs();});
+      $("#notif-read").addEventListener("click",()=>{window.EstoNotify.markAllRead();renderNotifs();});
+      document.addEventListener("click",e=>{if(!e.target.closest("#notif-dd")&&!e.target.closest("#notif-btn"))closeNotif();});
+      window.EstoNotify.onChange(()=>{ renderNotifs(); if((location.hash||"#overview").slice(1)==="overview")renderActivity(); updateChatBadge(); });
+
+      /* chat live updates */
+      function updateChatBadge(){ const unread=window.EstoChat.threads().reduce((s,t)=>s+t.unread,0); const b=$("#chat-badge"); if(b){ b.textContent=unread; b.style.display=unread?"inline-block":"none"; } }
+      window.EstoChat.onChange(()=>{ updateChatBadge(); if((location.hash||"").slice(1)==="messages"){ renderThreads(); if(activeThread){ const msgs=window.EstoChat.messages(activeThread); const el=$("#chat-msgs"); if(el){ el.innerHTML=msgs.map(msgHTML).join(""); el.scrollTop=el.scrollHeight; } } } });
+
+      /* misc */
       async function doLogout(e){if(e)e.preventDefault();await A().signOutUser();location.href="index.html";}
       $("#logout-btn").addEventListener("click",doLogout);
       $("#dash-toggle").addEventListener("click",()=>$("#dash-side").classList.toggle("open"));
-      $$("[data-theme-toggle]").forEach(b=>b.addEventListener("click",()=>{const dark=document.documentElement.getAttribute("data-theme")==="dark";document.documentElement.setAttribute("data-theme",dark?"light":"dark");try{localStorage.setItem("esto:theme",dark?"light":"dark");}catch(e){}$$("[data-theme-ico]").forEach(el=>{el.dataset.ico=dark?"moon":"sun";el.dataset.done="";hy(el.parentElement);});}));
-      $("#dash-search-input").addEventListener("keydown",e=>{if(e.key==="Enter"){const q=e.target.value.trim();location.href="properties.html"+(q?"?q="+encodeURIComponent(q):"");}});
+      $("#go-premium").addEventListener("click",()=>window.EstoPay.open({amount:1500,title:"Premium plan",description:"Monthly subscription",type:"subscription",accountRef:"Premium",phone:localStorage.getItem("esto:phone"),onSuccess:()=>go("payments")}));
+      const dsi=$("#dash-search-input");
+      dsi.addEventListener("input",()=>{ const q=dsi.value.toLowerCase(); if((location.hash||"#overview").slice(1)!=="overview")return; const rl=$("#rec-list"); if(!rl)return; const res=D.PROPERTIES.filter(p=>(p.title+" "+p.neighborhood+" "+p.address+" "+p.type).toLowerCase().includes(q)).slice(0,6); rl.innerHTML=res.length?res.map(recRow).join(""):`<p style="color:var(--muted);padding:14px">No matches.</p>`; });
+      dsi.addEventListener("keydown",e=>{if(e.key==="Enter"){const q=e.target.value.trim();location.href="properties.html"+(q?"?q="+encodeURIComponent(q):"");}});
 
       function paintUser(){$("#dash-greet").textContent="Welcome back, "+firstName()+".";$("#dash-avatar").textContent=initials();}
-      function start(){paintUser();const tab=(location.hash||"#overview").slice(1);go(tab);}
+      function start(){ paintUser(); renderNotifs(); updateChatBadge(); const tab=(location.hash||"#overview").slice(1); go(tab); }
       if(A().mode==="firebase"){A().onChange(paintUser);setTimeout(start,300);}else start();
     })();
   </script>

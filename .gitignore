@@ -12,6 +12,11 @@ Thumbs.db
 .vscode/
 .idea/
 
-# Env
+# Env — never commit real secrets
 .env
 .env.local
+server/.env
+**/.env
+
+# Server deps
+server/node_modules/

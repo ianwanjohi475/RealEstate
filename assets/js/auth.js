@@ -72,9 +72,11 @@
         // fire-and-forget analytics
         if (cfg.measurementId) import(`${base}/firebase-analytics.js`).then((m) => { try { m.getAnalytics(app); } catch (e) {} }).catch(() => {});
         const { onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword,
-          GoogleAuthProvider, signInWithPopup, updateProfile, signOut, setPersistence,
-          browserLocalPersistence } = authMod;
+          GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult,
+          updateProfile, signOut, setPersistence, browserLocalPersistence } = authMod;
         setPersistence(auth, browserLocalPersistence).catch(() => {});
+        // complete any pending Google redirect sign-in
+        getRedirectResult(auth).then((r) => { if (r && r.user) { user = normalize(r.user); emit(); } }).catch(() => {});
         const map = {
           "auth/email-already-in-use":"An account with that email already exists.",
           "auth/invalid-email":"That email address looks invalid.",
@@ -99,7 +101,17 @@
             if (name) await updateProfile(c.user, { displayName: name });
             user = normalize(c.user, { name }); emit(); return user; } catch (e) { throw nice(e); } },
           async signIn({ email, password }) { try { const c = await signInWithEmailAndPassword(auth, email, password); return normalize(c.user); } catch (e) { throw nice(e); } },
-          async signInGoogle() { try { const c = await signInWithPopup(auth, new GoogleAuthProvider()); return normalize(c.user); } catch (e) { throw nice(e); } },
+          async signInGoogle() {
+            const provider = new GoogleAuthProvider();
+            try { const c = await signInWithPopup(auth, provider); return normalize(c.user); }
+            catch (e) {
+              // popup blocked/closed -> fall back to full-page redirect (no popup needed)
+              if (e.code === "auth/popup-blocked" || e.code === "auth/popup-closed-by-user" || e.code === "auth/cancelled-popup-request") {
+                try { await signInWithRedirect(auth, provider); return null; } catch (e2) { throw nice(e2); }
+              }
+              throw nice(e);
+            }
+          },
           async updateName(name) { try { if (auth.currentUser) { await updateProfile(auth.currentUser, { displayName: name }); user = normalize(auth.currentUser); emit(); } } catch (e) { throw nice(e); } },
           async signOutUser() { await signOut(auth); }
         };
