@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard — Nyumba</title>
+  <meta name="description" content="Your Nyumba dashboard: saved homes, viewings, market insight and account settings.">
+  <meta name="theme-color" content="#0E3B32">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="assets/icons/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,500&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/styles.css">
+</head>
+<body class="dash">
+  <div class="dash-shell">
+    <!-- Sidebar -->
+    <aside class="dash-side" id="dash-side">
+      <a class="brand" href="index.html">
+        <span class="brand-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-7 9 7"/><path d="M5 10v9a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-9"/><path d="M9.5 20v-5a2.5 2.5 0 0 1 5 0v5"/></svg></span>
+        <span><b>Nyumba</b></span>
+      </a>
+      <nav class="dash-nav" id="dash-nav">
+        <a href="#overview" class="active" data-tab="overview"><span data-ico="dashboard"></span>Overview</a>
+        <a href="#saved" data-tab="saved"><span data-ico="bookmark"></span>Saved homes</a>
+        <a href="#viewings" data-tab="viewings"><span data-ico="calendar"></span>Viewings</a>
+        <a href="#market" data-tab="market"><span data-ico="trending"></span>Market insight</a>
+        <a href="#messages" data-tab="messages"><span data-ico="message"></span>Messages</a>
+        <a href="#settings" data-tab="settings"><span data-ico="settings"></span>Settings</a>
+      </nav>
+      <div class="side-foot">
+        <a href="properties.html" class="dash-nav" style="display:block"><span style="display:flex;align-items:center;gap:13px;padding:13px 16px;border-radius:12px" data-ico-wrap><span data-ico="search"></span>Browse homes</span></a>
+        <a href="#" id="logout-btn" style="display:flex;align-items:center;gap:13px;padding:13px 16px;border-radius:12px;color:rgba(255,255,255,.72)"><span data-ico="logout"></span>Sign out</a>
+      </div>
+    </aside>
+
+    <!-- Main -->
+    <main class="dash-main">
+      <div class="dash-topbar">
+        <div style="display:flex;align-items:center;gap:14px">
+          <button class="dash-hamburger" id="dash-toggle" style="width:44px;height:44px;border-radius:12px;border:1px solid var(--line);background:var(--paper);place-items:center"><span data-ico="menu"></span></button>
+          <div>
+            <h1 id="dash-title">Overview</h1>
+            <p class="greet" id="dash-greet">Welcome back.</p>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px">
+          <div class="dash-search"><span data-ico="search"></span><input placeholder="Search homes, areas…" id="dash-search-input"></div>
+          <button class="avatar-btn" style="border:1px solid var(--line)"><span class="avatar" id="dash-avatar">U</span></button>
+        </div>
+      </div>
+
+      <div id="dash-content"></div>
+    </main>
+  </div>
+
+  <script src="assets/js/firebase-config.js"></script>
+  <script src="assets/js/auth.js"></script>
+  <script src="assets/js/data.js"></script>
+  <script src="assets/js/icons.js"></script>
+  <script src="assets/js/main.js"></script>
+  <script>
+    (function () {
+      const D = window.NYUMBA, I = (n) => window.NyIcon.get(n);
+      const $ = (s, r = document) => r.querySelector(s);
+      const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
+      const hy = window.NyRender.hydrateIcons;
+
+      // Auth gate
+      window.NyAuth.requireAuth("login.html");
+
+      function user() { return window.NyAuth.currentUser() || { name: "Guest", email: "guest@nyumba.co.ke" }; }
+      function firstName() { return (user().name || "there").split(" ")[0]; }
+      function initials() { const n = user().name || "U"; return n.trim().split(/\s+/).slice(0,2).map(x=>x[0].toUpperCase()).join(""); }
+
+      const savedProps = () => D.PROPERTIES.filter(p => window.NyFavs.get().includes(p.id));
+
+      /* ---- Views ---- */
+      function overview() {
+        const saved = savedProps();
+        const kpis = [
+          ["bookmark","g", saved.length, "Saved homes", "+"+saved.length, false],
+          ["calendar","y", 3, "Upcoming viewings", "2 this week", false],
+          ["eye","b", 148, "Listings viewed", "+12%", false],
+          ["message","r", 5, "Agent messages", "1 new", false]
+        ];
+        const bars = [
+          ["Karen",42],["Kilimani",68],["Westlands",55],["Lavington",37],["Runda",24],["Kileleshwa",31]
+        ];
+        const maxBar = Math.max(...bars.map(b=>b[1]));
+        const recs = D.PROPERTIES.filter(p=>p.featured).slice(0,4);
+        return `
+          <div class="kpi-grid">
+            ${kpis.map(([ic,c,v,l,t])=>`
+              <div class="kpi reveal">
+                <span class="trend">${t}</span>
+                <div class="kpi__ico ${c}">${I(ic)}</div>
+                <b data-count="${v}">0</b><small>${l}</small>
+              </div>`).join("")}
+          </div>
+          <div class="dash-cols">
+            <div class="panel reveal">
+              <div class="panel__head"><h3>Listings viewed by area</h3><span class="badge">Last 30 days</span></div>
+              <div class="chart-box" id="chart">
+                ${bars.map(([n,v])=>`<div class="bar" data-h="${Math.round(v/maxBar*100)}"><span>${v}</span><small>${n.slice(0,4)}</small></div>`).join("")}
+              </div>
+            </div>
+            <div class="panel reveal">
+              <div class="panel__head"><h3>Recent activity</h3></div>
+              <ul class="activity">
+                <li><span class="act-dot">${I("verified")}</span><div><b>New verified listing in Kilimani</b><small>Sky Villa Penthouse · 2 hours ago</small></div></li>
+                <li><span class="act-dot">${I("calendar")}</span><div><b>Viewing confirmed</b><small>Karen villa · Sat 10:00am</small></div></li>
+                <li><span class="act-dot">${I("bookmark")}</span><div><b>Home saved</b><small>Lavington townhouse · yesterday</small></div></li>
+                <li><span class="act-dot">${I("message")}</span><div><b>Wanjiru replied to your enquiry</b><small>2 days ago</small></div></li>
+              </ul>
+            </div>
+          </div>
+          <div class="panel reveal" style="margin-top:24px">
+            <div class="panel__head"><h3>Recommended for you</h3><a class="btn btn--ghost btn--sm" href="properties.html">Browse all ${I("arrowRight")}</a></div>
+            <div class="mini-list">
+              ${recs.map(p=>`
+                <a class="mini-item" href="property.html?id=${p.id}">
+                  <img src="${D.img(p.images[0],200)}" alt="">
+                  <div class="mi-body"><b>${p.title}</b><small>${p.address}</small></div>
+                  <span class="mi-price">${D.fmtPrice(p.price)}${p.per||""}</span>
+                </a>`).join("")}
+            </div>
+          </div>`;
+      }
+
+      function savedView() {
+        const saved = savedProps();
+        if (!saved.length) return emptyState("bookmark","No saved homes yet","Tap the heart on any listing to save it here.","properties.html","Browse homes");
+        return `<div class="cards-grid">${saved.map(p=>window.NyRender.propCard(p)).join("")}</div>`;
+      }
+
+      function viewingsView() {
+        const rows = [
+          ["Ambassadorial 5-Bed Villa","Karen","Sat, 09 Aug · 10:00am","Wanjiru Kamau","active","Confirmed"],
+          ["Sky Villa Penthouse","Kilimani","Mon, 11 Aug · 2:00pm","Brian Otieno","pending","Pending"],
+          ["Garden 3-Bed Maisonette","Kileleshwa","Wed, 13 Aug · 11:30am","Aisha Mohamed","active","Confirmed"]
+        ];
+        return `<div class="panel"><div class="panel__head"><h3>Your viewings</h3><a class="btn btn--sm" href="properties.html">${I("plus")}Book a viewing</a></div>
+          <div style="overflow-x:auto"><table class="data-table">
+            <thead><tr><th>Property</th><th>Area</th><th>When</th><th>Agent</th><th>Status</th></tr></thead>
+            <tbody>${rows.map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td><td>${r[3]}</td><td><span class="status-pill ${r[4]}">${r[5]}</span></td></tr>`).join("")}</tbody>
+          </table></div></div>`;
+      }
+
+      function marketView() {
+        const areas = [
+          ["Karen","KES 92M","+6.2%","up"],["Kilimani","KES 46M","+4.1%","up"],
+          ["Westlands","KES 39M","+3.4%","up"],["Runda","KES 135M","+2.0%","up"],
+          ["Lavington","KES 58M","-1.2%","down"],["Syokimau","KES 6.9M","+8.5%","up"]
+        ];
+        return `
+          <div class="kpi-grid">
+            <div class="kpi"><div class="kpi__ico g">${I("trending")}</div><b>+5.4%</b><small>Avg. price growth (YoY)</small></div>
+            <div class="kpi"><div class="kpi__ico y">${I("clock")}</div><b>34</b><small>Avg. days to sell</small></div>
+            <div class="kpi"><div class="kpi__ico b">${I("gauge")}</div><b>7.8%</b><small>Avg. rental yield</small></div>
+            <div class="kpi"><div class="kpi__ico r">${I("home")}</div><b>1,204</b><small>Active verified listings</small></div>
+          </div>
+          <div class="panel"><div class="panel__head"><h3>Median asking price by area</h3><span class="badge">Q3 2026</span></div>
+            <div style="overflow-x:auto"><table class="data-table">
+              <thead><tr><th>Neighbourhood</th><th>Median price</th><th>YoY change</th><th>Trend</th></tr></thead>
+              <tbody>${areas.map(a=>`<tr><td>${a[0]}</td><td>${a[1]}</td><td style="color:${a[3]==='up'?'var(--ok)':'var(--danger)'}">${a[2]}</td><td><span class="status-pill ${a[3]==='up'?'active':'sold'}">${a[3]==='up'?'Rising':'Cooling'}</span></td></tr>`).join("")}</tbody>
+            </table></div></div>`;
+      }
+
+      function messagesView() {
+        const msgs = [
+          ["Wanjiru Kamau","Happy to arrange the Karen viewing this Saturday at 10am — does that work?","2h","1573496359142-b8d87734a5a2"],
+          ["Brian Otieno","The Kilimani penthouse title is verified and ready. Shall I hold it for you?","1d","1507003211169-0a1dd7228f2d"],
+          ["Aisha Mohamed","Sent over three more Kileleshwa options within your budget.","3d","1544005313-94ddf0286df2"]
+        ];
+        return `<div class="panel"><div class="panel__head"><h3>Messages</h3></div>
+          <div class="mini-list">${msgs.map(m=>`
+            <div class="mini-item">
+              <img src="${D.img(m[3],120)}" alt="">
+              <div class="mi-body"><b>${m[0]}</b><small style="white-space:normal">${m[1]}</small></div>
+              <small style="color:var(--muted)">${m[2]}</small>
+            </div>`).join("")}</div></div>`;
+      }
+
+      function settingsView() {
+        const u = user();
+        return `<div class="dash-cols">
+          <div class="panel">
+            <div class="panel__head"><h3>Profile</h3></div>
+            <form id="profile-form">
+              <div class="form-field"><label>Full name</label><input class="inp" id="p-name" value="${u.name||''}"></div>
+              <div class="form-field"><label>Email</label><input class="inp" value="${u.email||''}" disabled></div>
+              <div class="form-field"><label>Phone</label><input class="inp" placeholder="07xx xxx xxx"></div>
+              <button class="btn" type="submit">Save changes</button>
+            </form>
+          </div>
+          <div class="panel">
+            <div class="panel__head"><h3>Preferences</h3></div>
+            <label class="check-row" style="margin-bottom:16px"><input type="checkbox" checked> Email me new verified listings</label>
+            <label class="check-row" style="margin-bottom:16px"><input type="checkbox" checked> WhatsApp viewing reminders</label>
+            <label class="check-row" style="margin-bottom:16px"><input type="checkbox"> Weekly market report</label>
+            <div style="border-top:1px solid var(--line-2);margin-top:8px;padding-top:16px">
+              <p style="color:var(--muted);font-size:.9rem;margin-bottom:12px">Signed in via <b>${window.NyAuth.mode==='firebase'?'Firebase':'demo mode'}</b>.</p>
+              <button class="btn btn--ghost" id="settings-logout">${I("logout")}Sign out</button>
+            </div>
+          </div>
+        </div>`;
+      }
+
+      function emptyState(ic,t,s,href,cta) {
+        return `<div class="panel" style="text-align:center;padding:60px 24px">
+          <div style="width:64px;height:64px;margin:0 auto 16px;border-radius:16px;background:var(--brand-050);color:var(--brand);display:grid;place-items:center">${I(ic)}</div>
+          <h3 style="margin-bottom:8px">${t}</h3><p style="color:var(--muted);margin-bottom:20px">${s}</p>
+          <a class="btn" href="${href}">${cta}</a></div>`;
+      }
+
+      const VIEWS = { overview, saved: savedView, viewings: viewingsView, market: marketView, messages: messagesView, settings: settingsView };
+      const TITLES = { overview:"Overview", saved:"Saved homes", viewings:"Viewings", market:"Market insight", messages:"Messages", settings:"Settings" };
+
+      function renderTab(tab) {
+        const content = $("#dash-content");
+        content.innerHTML = (VIEWS[tab] || overview)();
+        $("#dash-title").textContent = TITLES[tab] || "Overview";
+        hy(content); window.NyRender.bindFavs(content);
+        // animate bars & counters
+        requestAnimationFrame(() => {
+          $$(".bar", content).forEach(b => b.style.height = b.dataset.h + "%");
+          $$("[data-count]", content).forEach(el => {
+            const target = +el.dataset.count; let n = 0; const step = () => { n += Math.ceil(target/24); if(n>=target){el.textContent=target;return;} el.textContent=n; requestAnimationFrame(step); }; step();
+          });
+          $$(".reveal", content).forEach(r=>r.classList.add("in"));
+        });
+        // settings handlers
+        const pf = $("#profile-form", content);
+        if (pf) pf.addEventListener("submit", async (e)=>{ e.preventDefault(); await window.NyAuth.updateName($("#p-name").value.trim()); paintUser(); window.NyToast("Profile updated","checkCircle"); });
+        const sl = $("#settings-logout", content);
+        if (sl) sl.addEventListener("click", doLogout);
+      }
+
+      function setActive(tab) {
+        $$("#dash-nav a").forEach(a => a.classList.toggle("active", a.dataset.tab === tab));
+      }
+
+      function go(tab) { if(!VIEWS[tab]) tab="overview"; setActive(tab); renderTab(tab); history.replaceState(null,"","#"+tab); $("#dash-side").classList.remove("open"); }
+
+      $$("#dash-nav a").forEach(a => a.addEventListener("click", (e)=>{ e.preventDefault(); go(a.dataset.tab); }));
+
+      async function doLogout(e){ if(e)e.preventDefault(); await window.NyAuth.signOutUser(); location.href="index.html"; }
+      $("#logout-btn").addEventListener("click", doLogout);
+      $("#dash-toggle").addEventListener("click", ()=> $("#dash-side").classList.toggle("open"));
+
+      function paintUser(){ $("#dash-greet").textContent = "Welcome back, "+firstName()+"."; $("#dash-avatar").textContent = initials(); }
+
+      // Search jumps to listings
+      $("#dash-search-input").addEventListener("keydown",(e)=>{ if(e.key==="Enter"){ const q=e.target.value.trim(); location.href="properties.html"+(q?"?q="+encodeURIComponent(q):""); }});
+
+      // boot
+      function start(){ paintUser(); const tab=(location.hash||"#overview").slice(1); go(tab); }
+      // wait a tick for firebase session restore in firebase mode
+      if (window.NyAuth.mode === "firebase") { window.NyAuth.onChange(paintUser); setTimeout(start, 300); }
+      else start();
+    })();
+  </script>
+</body>
+</html>

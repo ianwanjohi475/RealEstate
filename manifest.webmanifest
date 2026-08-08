@@ -1,0 +1,26 @@
+{
+  "name": "Nyumba — Verified Homes, Nairobi",
+  "short_name": "Nyumba",
+  "description": "Nairobi's verified-listings real estate agency. Buy, rent and invest with confidence — every home physically inspected and title-checked.",
+  "id": "/",
+  "start_url": "index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#F7F4EC",
+  "theme_color": "#0E3B32",
+  "lang": "en",
+  "dir": "ltr",
+  "categories": ["business", "lifestyle", "shopping"],
+  "icons": [
+    { "src": "assets/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "assets/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "assets/icons/maskable-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "assets/icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Browse properties", "url": "properties.html", "description": "See all verified homes" },
+    { "name": "My dashboard", "url": "dashboard.html", "description": "Saved homes & viewings" },
+    { "name": "Contact us", "url": "contact.html", "description": "Talk to an agent" }
+  ]
+}
