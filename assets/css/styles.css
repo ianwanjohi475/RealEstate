@@ -213,7 +213,7 @@ svg{display:block}
 .avatar-btn{display:flex;align-items:center;gap:9px;padding:6px 16px 6px 6px;border-radius:999px;border:1px solid var(--line);
   background:var(--card);font-weight:700;color:var(--ink);transition:.2s}
 .avatar-btn:hover{border-color:var(--brand)}
-.site-header.on-hero:not(.solid) .avatar-btn{background:rgba(255,255,255,.14);border-color:rgba(255,255,255,.25);color:#fff}
+.site-header.on-hero:not(.solid) .avatar-btn{background:#fff;border-color:#fff;color:var(--brand);box-shadow:0 6px 18px rgba(0,0,0,.18)}
 .avatar{width:34px;height:34px;border-radius:50%;background:linear-gradient(145deg,var(--brand),var(--brand-700));
   color:#fff;display:grid;place-items:center;font-weight:800;font-size:.85rem;flex:none;font-family:var(--font-sans)}
 
@@ -593,11 +593,18 @@ select option,select optgroup{color:#16121b;background:#ffffff}
 .auth-tab.active{background:var(--brand);color:#fff}
 .auth-close{width:50px;align-self:stretch;border:none;background:var(--gold);color:#241a05;display:grid;place-items:center}
 .auth-close:hover{background:var(--danger);color:#fff}
-.auth-body{padding:24px 26px;overflow-y:auto}
-.auth-body .form-field{margin-bottom:13px}
-.auth-body h3{font-size:1.32rem;margin-bottom:3px}
-.auth-body .sub{color:var(--muted);margin-bottom:18px;font-size:.92rem}
+.auth-body{padding:20px 24px 24px;overflow-y:auto}
+.auth-body .form-field{margin-bottom:12px}
+.auth-body h3{font-size:1.28rem;margin-bottom:2px}
+.auth-body .sub{color:var(--muted);margin-bottom:14px;font-size:.9rem}
+.auth-body .oauth-btn{padding:12px;margin-bottom:0}
+.auth-body .divider{margin:14px 0}
 .oauth-btn img{width:20px;height:20px}
+/* password field: leave room for the eye toggle so text never hides under it */
+.inp-wrap:has(.inp-toggle) .inp{padding-right:48px}
+.inp-toggle{width:34px;height:34px;border-radius:9px;display:grid;place-items:center}
+.inp-toggle:hover{color:var(--brand);background:var(--bg-2)}
+.inp-toggle .ico{width:19px;height:19px}
 .forgot{color:var(--brand-400);font-weight:700;font-size:.9rem;background:none;border:none}
 
 /* ============================================================
@@ -616,7 +623,7 @@ select option,select optgroup{color:#16121b;background:#ffffff}
 .dash-side .side-card-mini{background:rgba(255,255,255,.08);border-radius:16px;padding:18px;margin-top:16px;color:#fff}
 .dash-side .side-card-mini .ico{width:26px;height:26px;color:var(--gold-300);margin-bottom:8px}
 .dash-side .side-foot{border-top:1px solid rgba(255,255,255,.12);padding-top:14px;margin-top:14px}
-.dash-main{padding:26px clamp(18px,3vw,42px)}
+.dash-main{padding:26px clamp(18px,3vw,42px);min-width:0;overflow-x:hidden}
 .dash-topbar{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:28px;flex-wrap:wrap}
 .dash-topbar h1{font-size:1.7rem;font-weight:800}
 .dash-topbar .greet{color:var(--muted);margin-top:2px}
@@ -798,7 +805,7 @@ select option,select optgroup{color:#16121b;background:#ffffff}
 /* ============================================================
    CHAT (real-time messaging)
    ============================================================ */
-.chat-shell{display:grid;grid-template-columns:300px 1fr;height:min(640px,72vh);border:1px solid var(--line);border-radius:var(--r-lg);overflow:hidden;background:var(--card)}
+.chat-shell{display:grid;grid-template-columns:300px 1fr;height:clamp(440px,calc(100vh - 170px),720px);border:1px solid var(--line);border-radius:var(--r-lg);overflow:hidden;background:var(--card)}
 .chat-list{border-right:1px solid var(--line);overflow-y:auto;background:var(--card-2)}
 .chat-search{padding:14px;border-bottom:1px solid var(--line-2)}
 .chat-search input{width:100%;padding:11px 14px;border:1px solid var(--line);border-radius:11px;background:var(--bg);color:var(--ink);font-family:inherit}
