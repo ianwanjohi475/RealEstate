@@ -274,6 +274,8 @@ svg{display:block}
 .search-field input,.search-field select{border:none;background:none;font-family:inherit;font-size:1rem;font-weight:600;color:var(--ink);padding:2px 0;width:100%}
 .search-field select{appearance:none;cursor:pointer}
 .search-field input:focus,.search-field select:focus{outline:none}
+/* native dropdown option list must stay readable in dark mode (OS renders on white) */
+select option,select optgroup{color:#16121b;background:#ffffff}
 .search-icon-btn{width:56px;border-radius:13px;border:1px solid var(--line);background:var(--bg-2);color:var(--ink);display:grid;place-items:center;transition:.2s}
 .search-icon-btn:hover{border-color:var(--brand);color:var(--brand)}
 .search-card .btn{border-radius:13px;padding-inline:30px}

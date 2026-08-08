@@ -287,11 +287,35 @@
     window.addEventListener("scroll", () => btn.classList.toggle("show", window.scrollY > 600), { passive: true });
   }
 
-  /* ---------- Favorites ---------- */
+  /* ---------- Favorites (localStorage + Firestore mirror) ---------- */
   const FAV_KEY = "esto:favs";
   const getFavs = () => { try { return JSON.parse(localStorage.getItem(FAV_KEY)) || []; } catch { return []; } };
   const setFavs = (a) => localStorage.setItem(FAV_KEY, JSON.stringify(a));
-  function toggleFav(id) { const f = getFavs(); const i = f.indexOf(id); if (i >= 0) { f.splice(i, 1); toast("Removed from saved homes", "heart"); } else { f.push(id); toast("Saved to your homes", "heart"); } setFavs(f); return f.includes(id); }
+  const fbUid = () => (window.EstoFB && window.EstoFB.uid && window.EstoFB.uid()) || null;
+  async function fsWriteFav(id, on) {
+    const fb = window.EstoFB; if (!fb || !fbUid()) return;
+    try { const { doc, setDoc, deleteDoc } = fb.fx; const ref = doc(fb.db, `users/${fbUid()}/saved/${id}`);
+      if (on) await setDoc(ref, { at: Date.now() }); else await deleteDoc(ref); } catch (e) {}
+  }
+  function toggleFav(id) {
+    const f = getFavs(); const i = f.indexOf(id); let on;
+    if (i >= 0) { f.splice(i, 1); on = false; toast("Removed from saved homes", "heart"); }
+    else { f.push(id); on = true; toast("Saved to your homes", "heart"); }
+    setFavs(f); fsWriteFav(id, on); return f.includes(id);
+  }
+  async function pullFavs(fb) {
+    try {
+      const { collection, getDocs, doc, setDoc } = fb.fx; const uid = fb.uid();
+      const snap = await getDocs(collection(fb.db, `users/${uid}/saved`));
+      const remote = snap.docs.map((d) => d.id);
+      const merged = Array.from(new Set([...getFavs(), ...remote]));
+      // push any local-only saves up so the DB is the union
+      merged.filter((id) => !remote.includes(id)).forEach((id) => { try { setDoc(doc(fb.db, `users/${uid}/saved/${id}`), { at: Date.now() }); } catch (e) {} });
+      setFavs(merged);
+      document.dispatchEvent(new Event("esto-favs-synced"));
+    } catch (e) {}
+  }
+  window.addEventListener("esto-fb-ready", (e) => { if (e.detail && e.detail.uid && e.detail.uid()) pullFavs(e.detail); });
   window.EstoFavs = { get: getFavs, toggle: toggleFav };
 
   /* ---------- Cards ---------- */

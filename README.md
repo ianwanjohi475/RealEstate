@@ -104,6 +104,39 @@ manifest.webmanifest · sw.js · firebase.json
 - **Contact form / email** posts to the server's `/api/contact` (nodemailer),
   falling back to a success acknowledgement when no backend/SMTP is set.
 
+## Real data — Cloud Firestore
+
+Chats, notifications and saved homes are stored in **your** Firestore database
+(live, and synced across devices) as soon as a user signs in with Firebase.
+Until Firestore is reachable, the app uses a localStorage fallback so it still
+works offline/in demo.
+
+**Enable it (2 minutes):**
+1. Open [Firestore](https://console.firebase.google.com/project/realestate-17867/firestore)
+   → **Create database** → **Production mode** → pick a region.
+2. Paste the rules from [`firestore.rules`](firestore.rules) under the **Rules** tab
+   (or run `firebase deploy --only firestore:rules`). They restrict every user to
+   their own `users/{uid}` documents.
+
+**What gets stored** (per signed-in user):
+
+```
+users/{uid}/messages/{id}        chat messages  { threadId, from, text, at, seen }
+users/{uid}/notifications/{id}   notifications  { ico, title, body, at, read }
+users/{uid}/saved/{propertyId}   saved homes    { at }
+```
+
+> Chat requires a real Firebase account (email/password or Google) so each
+> message is tied to a `uid`. The demo "Guest" login stays on localStorage.
+
+### Fixing `auth/unauthorized-domain`
+This is a **Firebase console** setting, not a code bug: Google/Firebase only
+allow sign-in from domains you approve.
+[Authentication → Settings → Authorized domains](https://console.firebase.google.com/project/realestate-17867/authentication/settings)
+→ add the exact host you're on. `localhost` is pre-approved, and
+`realestate-17867.web.app` is approved automatically once deployed. Email/password
+sign-in is unaffected; this only gates the Google button.
+
 ## Contact (portfolio)
 
 - **Phone / WhatsApp:** 0758 950 370

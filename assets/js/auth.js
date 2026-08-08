@@ -71,6 +71,12 @@
         const auth = authMod.getAuth(app);
         // fire-and-forget analytics
         if (cfg.measurementId) import(`${base}/firebase-analytics.js`).then((m) => { try { m.getAnalytics(app); } catch (e) {} }).catch(() => {});
+        // Firestore — real database for chats, saved homes, notifications
+        import(`${base}/firebase-firestore.js`).then((fs) => {
+          const db = fs.getFirestore(app);
+          window.EstoFB = { app, auth, db, fx: fs, uid: () => (user && user.uid) || null };
+          window.dispatchEvent(new CustomEvent("esto-fb-ready", { detail: window.EstoFB }));
+        }).catch(() => {});
         const { onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword,
           GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult,
           updateProfile, signOut, setPersistence, browserLocalPersistence } = authMod;

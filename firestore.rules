@@ -1,0 +1,11 @@
+rules_version = '2';
+// Esto — Firestore security rules.
+// Each signed-in user can only read/write their OWN data.
+// Deploy:  firebase deploy --only firestore:rules
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /users/{uid}/{document=**} {
+      allow read, write: if request.auth != null && request.auth.uid == uid;
+    }
+  }
+}
