@@ -219,8 +219,7 @@
     $$("[data-pw]", host).forEach((b) => b.addEventListener("click", () => {
       const inp = b.parentElement.querySelector("input");
       inp.type = inp.type === "password" ? "text" : "password";
-      b.querySelector("[data-ico]").dataset.ico = inp.type === "password" ? "eye" : "eyeOff";
-      b.querySelector("[data-ico]").dataset.done = ""; hydrateIcons(b);
+      b.innerHTML = I(inp.type === "password" ? "eye" : "eyeOff");
     }));
     const bar = $("#pw-bar", host);
     if (bar) $("input[name=password]", host).addEventListener("input", (e) => {
