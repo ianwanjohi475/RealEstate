@@ -298,8 +298,11 @@
       dsi.addEventListener("keydown",e=>{if(e.key==="Enter"){const q=e.target.value.trim();location.href="properties.html"+(q?"?q="+encodeURIComponent(q):"");}});
 
       function paintUser(){$("#dash-greet").textContent="Welcome back, "+firstName()+".";$("#dash-avatar").textContent=initials();}
-      function start(){ paintUser(); renderNotifs(); updateChatBadge(); const tab=(location.hash||"#overview").slice(1); go(tab); }
-      if(A().mode==="firebase"){A().onChange(paintUser);setTimeout(start,300);}else start();
+      let started=false, lastUid=(A().currentUser()||{}).uid;
+      function start(){ started=true; paintUser(); renderNotifs(); updateChatBadge(); const tab=(location.hash||"#overview").slice(1); go(tab); }
+      // refresh greeting always; re-render the view only when the signed-in identity changes (login/restore)
+      A().onChange(()=>{ paintUser(); const uid=(A().currentUser()||{}).uid; if(started && uid!==lastUid){ lastUid=uid; const tab=(location.hash||"#overview").slice(1); if(VIEWS[tab]) renderTab(tab); } });
+      if(A().mode==="demo") start(); else setTimeout(start, 500);
     })();
   </script>
 </body>

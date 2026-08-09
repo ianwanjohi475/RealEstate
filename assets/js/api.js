@@ -85,6 +85,7 @@
     getMessages: (otherId) => req("/api/messages/" + otherId),
     sendMessage: (to, text) => req("/api/messages", { method: "POST", body: { to, text } }),
     mpesa: (payload) => req("/api/mpesa/stkpush", { method: "POST", auth: false, body: payload }),
+    mpesaQuery: (checkoutRequestId) => req("/api/mpesa/query", { method: "POST", auth: false, body: { checkoutRequestId } }),
     // realtime
     connectSocket, disconnectSocket,
     onMessage: (cb) => { listeners.message.add(cb); return () => listeners.message.delete(cb); },

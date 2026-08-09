@@ -222,6 +222,24 @@ export function createApp(env = process.env) {
   });
   app.post("/api/mpesa/callback", (req, res) => { console.log("M-Pesa callback:", JSON.stringify(req.body)); res.json({ ResultCode: 0, ResultDesc: "Accepted" }); });
 
+  // Confirm the real result of an STK push (so we never claim "paid" falsely)
+  app.post("/api/mpesa/query", async (req, res) => {
+    try {
+      if (!MP.key || !MP.secret) return res.status(503).json({ error: "M-Pesa keys not configured." });
+      const { checkoutRequestId } = req.body || {};
+      if (!checkoutRequestId) return res.status(400).json({ error: "checkoutRequestId required." });
+      const token = await mpToken(); const t = ts();
+      const password = Buffer.from(`${MP.shortcode}${MP.passkey}${t}`).toString("base64");
+      const r = await fetch(`${MP_BASE}/mpesa/stkpushquery/v1/query`, {
+        method: "POST", headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ BusinessShortCode: MP.shortcode, Password: password, Timestamp: t, CheckoutRequestID: checkoutRequestId })
+      });
+      const data = await r.json();
+      // ResultCode "0" = success; "1032" = cancelled; else pending/failed. errorCode present => still processing.
+      res.json(data);
+    } catch (e) { res.status(500).json({ error: e.message }); }
+  });
+
   /* ---------- contact ---------- */
   app.post("/api/contact", async (req, res) => {
     const { name, email, phone, message, topic } = req.body || {};

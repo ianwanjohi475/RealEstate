@@ -217,6 +217,17 @@ svg{display:block}
 .site-header.on-hero:not(.solid) .avatar-btn{background:#fff;border-color:#fff;color:var(--brand);box-shadow:0 6px 18px rgba(0,0,0,.18)}
 .avatar{width:34px;height:34px;border-radius:50%;background:linear-gradient(145deg,var(--brand),var(--brand-700));
   color:#fff;display:grid;place-items:center;font-weight:800;font-size:.85rem;flex:none;font-family:var(--font-sans)}
+/* account menu */
+.acct-wrap{position:relative}
+.acct-caret{width:15px;height:15px;opacity:.7;transition:.2s}
+.acct-wrap .avatar-btn[aria-haspopup]{padding-right:12px}
+.acct-menu{width:250px;padding-bottom:8px}
+.acct-menu a,.acct-menu button{display:flex;align-items:center;gap:11px;width:100%;padding:12px 18px;font-weight:600;
+  font-size:.94rem;color:var(--ink);background:none;border:none;text-align:left;transition:.15s;font-family:inherit}
+.acct-menu a:hover,.acct-menu button:hover{background:var(--brand-050);color:var(--brand)}
+.acct-menu a .ico,.acct-menu button .ico{width:18px;height:18px;color:var(--brand-400)}
+.acct-menu [data-acct-logout]{color:var(--danger);border-top:1px solid var(--line-2);margin-top:6px;padding-top:14px}
+.acct-menu [data-acct-logout] .ico{color:var(--danger)}
 
 /* Social rail (home hero) */
 .social-rail{position:fixed;left:22px;top:50%;transform:translateY(-50%);z-index:65;display:flex;flex-direction:column;gap:14px}
@@ -788,6 +799,9 @@ select option,select optgroup{color:#16121b;background:#ffffff}
   border:1px solid var(--line);border-radius:var(--r-lg);box-shadow:var(--shadow-lg);z-index:80;overflow:hidden;
   opacity:0;transform:translateY(-8px);pointer-events:none;transition:.2s var(--ease)}
 .dropdown.open{opacity:1;transform:none;pointer-events:auto}
+@media (max-width:620px){
+  .dropdown{position:fixed;top:66px;left:10px;right:10px;width:auto;max-width:none}
+}
 .dropdown__head{display:flex;align-items:center;justify-content:space-between;padding:16px 18px;border-bottom:1px solid var(--line-2)}
 .dropdown__head b{font-family:var(--font-display);font-size:1rem}
 .dropdown__head button{background:none;border:none;color:var(--brand);font-weight:700;font-size:.82rem}

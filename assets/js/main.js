@@ -59,7 +59,16 @@
     const user = A() && A().currentUser();
     const links = NAV.map(([h, l]) => `<a href="${h}" class="${page === h ? "active" : ""}">${l}</a>`).join("");
     const authArea = user
-      ? `<a class="avatar-btn" href="dashboard.html#settings" title="Your profile"><span class="avatar">${initials(user)}</span><span class="lbl">${(user.name || "Account").split(" ")[0]}</span></a>`
+      ? `<div class="acct-wrap">
+           <button class="avatar-btn" data-acct-toggle aria-haspopup="true"><span class="avatar">${initials(user)}</span><span class="lbl">${(user.name || "Account").split(" ")[0]}</span><span class="acct-caret" data-ico="chevronDown"></span></button>
+           <div class="dropdown acct-menu" id="acct-menu">
+             <div class="dropdown__head"><b>${(user.name || "Account")}</b></div>
+             <a href="dashboard.html">${I("dashboard")}Dashboard</a>
+             <a href="dashboard.html#saved">${I("bookmark")}Saved homes</a>
+             <a href="dashboard.html#settings">${I("user")}Profile &amp; settings</a>
+             <button data-acct-logout>${I("logout")}Sign out</button>
+           </div>
+         </div>`
       : `<button class="btn--login" data-open-auth="login">Login</button>`;
 
     host.className = "site-header" + (onHero ? " on-hero" : "");
@@ -100,6 +109,14 @@
     $$("[data-close-drawer]", host).forEach((b) => b.addEventListener("click", () => drawer.classList.remove("open")));
     $$("[data-theme-toggle]", host).forEach((b) => b.addEventListener("click", toggleTheme));
     $$("[data-open-auth]", host).forEach((b) => b.addEventListener("click", () => { drawer.classList.remove("open"); openAuth(b.dataset.openAuth); }));
+    // account menu
+    const acctToggle = $("[data-acct-toggle]", host), acctMenu = $("#acct-menu", host);
+    if (acctToggle && acctMenu) {
+      acctToggle.addEventListener("click", (e) => { e.stopPropagation(); acctMenu.classList.toggle("open"); });
+      document.addEventListener("click", (e) => { if (!e.target.closest(".acct-wrap")) acctMenu.classList.remove("open"); });
+      const lo = $("[data-acct-logout]", acctMenu);
+      if (lo) lo.addEventListener("click", async () => { try { await A().signOutUser(); } catch (e) {} toast("Signed out.", "logout"); location.href = "index.html"; });
+    }
     hydrateIcons(host);
   }
 

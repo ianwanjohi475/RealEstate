@@ -56,14 +56,15 @@
       <div class="pay-amount"><small>${cfg.title || "Payment"}</small><b>${fmt(cfg.amount)}</b></div>
       <div class="pay-status">${spinner ? '<span class="pay-spinner"></span>' : I(spinner === false ? "checkCircle" : "clock")}<span>${html}</span></div>`;
   }
-  function success() {
-    addTx({ dir: "out", type: cfg.type || "payment", title: cfg.title || "Payment", amount: +cfg.amount, ref: cfg.accountRef || "Esto" });
+  function success(receipt) {
+    addTx({ dir: "out", type: cfg.type || "payment", title: cfg.title || "Payment", amount: +cfg.amount, ref: receipt || cfg.accountRef || "Esto" });
     if (window.EstoNotify) window.EstoNotify.add({ ico: "coins", title: "Payment received", body: `${fmt(cfg.amount)} — ${cfg.title}` });
     $("#pay-body").innerHTML = `
       <div style="text-align:center;padding:14px 0">
         <div style="width:74px;height:74px;border-radius:50%;background:rgba(46,158,107,.14);color:var(--ok);display:grid;place-items:center;margin:0 auto 16px">${I("checkCircle")}</div>
         <h3 style="font-size:1.3rem;margin-bottom:6px">Payment successful</h3>
         <p style="color:var(--muted)">${fmt(cfg.amount)} for ${cfg.title}.</p>
+        ${receipt ? `<p style="color:var(--muted);font-size:.85rem;margin-top:4px">M-Pesa receipt: <b>${receipt}</b></p>` : ""}
         <button class="btn btn--block btn--lg" style="margin-top:20px" data-pay-close>Done</button>
       </div>`;
     $("#pay-body").querySelector("[data-pay-close]").addEventListener("click", close);
@@ -76,30 +77,51 @@
     b.addEventListener("click", renderForm); $("#pay-body").appendChild(b);
   }
 
+  const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+  function pending(msg) {
+    status(msg, false);
+    const b = document.createElement("button"); b.className = "btn btn--ghost btn--block"; b.style.marginTop = "14px"; b.textContent = "Close";
+    b.addEventListener("click", close); $("#pay-body").appendChild(b);
+  }
+
   async function pay(e) {
     e.preventDefault();
     const phone = $("#pay-phone").value.trim();
     if (!/^(?:\+?254|0)?7\d{8}$/.test(phone.replace(/\s/g, ""))) return alertField("Enter a valid Safaricom number, e.g. 0712 345 678.");
     cfg.phone = phone;
     status("Sending STK push to your phone…", true);
-    // try the real backend
+
     if (API_BASE) {
+      let data;
       try {
         const headers = { "Content-Type": "application/json" };
         const tk = window.EstoAPI && window.EstoAPI.token && window.EstoAPI.token();
         if (tk) headers.Authorization = "Bearer " + tk;
-        const r = await fetch(API_BASE + "/api/mpesa/stkpush", {
-          method: "POST", headers,
-          body: JSON.stringify({ phone, amount: cfg.amount, accountRef: cfg.accountRef || "Esto", description: cfg.description || cfg.title })
-        });
-        const data = await r.json();
-        if (r.ok && data.ok) { status("Prompt sent. Enter your M-Pesa PIN on your phone…", true); setTimeout(success, 6000); return; }
-        // key-missing or error -> demo fallback
-      } catch (err) { /* server down -> demo */ }
+        const r = await fetch(API_BASE + "/api/mpesa/stkpush", { method: "POST", headers,
+          body: JSON.stringify({ phone, amount: cfg.amount, accountRef: cfg.accountRef || "Esto", description: cfg.description || cfg.title }) });
+        data = await r.json();
+        if (r.status === 503) { /* keys missing on server -> demo */ }
+        else if (!r.ok || !data.ok) { return fail(data.error || "Could not start the payment. Please try again."); }
+        else {
+          // Real STK sent — now POLL for the actual result. Never claim success without it.
+          status("Prompt sent. Open M-Pesa on your phone and enter your PIN…", true);
+          const id = data.checkoutRequestId;
+          for (let i = 0; i < 8; i++) {
+            await wait(4000);
+            let q; try { q = await (window.EstoAPI ? window.EstoAPI.mpesaQuery(id) : fetch(API_BASE + "/api/mpesa/query", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ checkoutRequestId: id }) }).then((x) => x.json())); } catch (err) { continue; }
+            const code = q && q.ResultCode !== undefined ? String(q.ResultCode) : null;
+            if (code === "0") return success(q.MpesaReceiptNumber);           // real payment confirmed
+            if (code === "1032") return fail("You cancelled the request on your phone.");
+            if (code && code !== "0") return fail(q.ResultDesc || "Payment was not completed.");
+            // else: still processing (q.errorCode present) — keep polling
+          }
+          return pending("Still waiting for your M-Pesa confirmation. If you completed it, it will reflect shortly — no charge has been recorded yet.");
+        }
+      } catch (err) { /* server unreachable -> demo */ }
     }
-    // DEMO fallback (no reachable backend)
-    status("Prompt sent to " + phone + ". Enter your M-Pesa PIN…", true);
-    setTimeout(success, 3200);
+    // DEMO fallback ONLY when there is no reachable backend
+    status("Demo mode — no live payment server connected. Simulating…", true);
+    await wait(2500); success();
   }
   function alertField(msg) { const b = $("#pay-body"); const h = b.querySelector(".field-hint"); if (h) { h.textContent = msg; h.style.color = "var(--danger)"; } }
 
