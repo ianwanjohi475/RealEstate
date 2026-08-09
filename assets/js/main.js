@@ -104,11 +104,21 @@
 
     const onScroll = () => host.classList.toggle("solid", window.scrollY > 30);
     onScroll(); window.addEventListener("scroll", onScroll, { passive: true });
-    const drawer = $("#drawer");
-    $$("[data-open-drawer]", host).forEach((b) => b.addEventListener("click", () => drawer.classList.add("open")));
-    $$("[data-close-drawer]", host).forEach((b) => b.addEventListener("click", () => drawer.classList.remove("open")));
+    // Portal the drawer onto <body>. The header uses backdrop-filter when
+    // scrolled (.solid), which turns it into a containing block for
+    // position:fixed children — that was collapsing the drawer to the
+    // header's height and letting the page show through. On <body> it fills
+    // the viewport at any scroll position.
+    const oldDrawer = document.querySelector("body > #drawer"); if (oldDrawer) oldDrawer.remove();
+    const drawer = $("#drawer", host); if (drawer) document.body.appendChild(drawer);
+    const openDrawer = () => { drawer.classList.add("open"); document.documentElement.classList.add("drawer-open"); };
+    const closeDrawer = () => { drawer.classList.remove("open"); document.documentElement.classList.remove("drawer-open"); };
+    $$("[data-open-drawer]", host).forEach((b) => b.addEventListener("click", openDrawer));
+    $$("[data-close-drawer]", drawer).forEach((b) => b.addEventListener("click", closeDrawer));
     $$("[data-theme-toggle]", host).forEach((b) => b.addEventListener("click", toggleTheme));
-    $$("[data-open-auth]", host).forEach((b) => b.addEventListener("click", () => { drawer.classList.remove("open"); openAuth(b.dataset.openAuth); }));
+    $$("[data-theme-toggle]", drawer).forEach((b) => b.addEventListener("click", toggleTheme));
+    $$("[data-open-auth]", host).forEach((b) => b.addEventListener("click", () => openAuth(b.dataset.openAuth)));
+    $$("[data-open-auth]", drawer).forEach((b) => b.addEventListener("click", () => { closeDrawer(); openAuth(b.dataset.openAuth); }));
     // account menu
     const acctToggle = $("[data-acct-toggle]", host), acctMenu = $("#acct-menu", host);
     if (acctToggle && acctMenu) {
