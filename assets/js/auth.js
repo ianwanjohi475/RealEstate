@@ -150,7 +150,9 @@
       onChange(cb) { listeners.add(cb); cb(user); return () => listeners.delete(cb); },
       async signUp({ name, email, password }) { const r = await API.register(name, email, password); API.setToken(r.token); user = mapApiUser(r.user); emit(); API.connectSocket(); return user; },
       async signIn({ email, password }) { const r = await API.login(email, password); API.setToken(r.token); user = mapApiUser(r.user); emit(); API.connectSocket(); return user; },
-      async signInGoogle() { throw new Error("Google sign-in isn't enabled on this server — please use email & password."); },
+      async signInGoogle() { throw new Error("Google isn't configured. Add GOOGLE_CLIENT_ID in server/.env, or use email & password."); },
+      // called by the Google Identity Services button with a verified credential
+      async signInGoogleCredential(credential) { const r = await API.googleAuth(credential); API.setToken(r.token); user = mapApiUser(r.user); emit(); API.connectSocket(); return user; },
       async updateName(name) { try { const r = await API.updateMe({ name }); user = mapApiUser(r.user); emit(); } catch (e) {} },
       async signOutUser() { API.logout(); user = null; emit(); }
     };

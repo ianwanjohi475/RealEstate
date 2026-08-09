@@ -8,6 +8,7 @@ import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 import nodemailer from "nodemailer";
 import mongoose from "mongoose";
+import { OAuth2Client } from "google-auth-library";
 import { User, Message, Notification, Saved, Viewing, Payment, threadId } from "./models.js";
 
 const AGENTS = [
@@ -75,8 +76,29 @@ export function createApp(env = process.env) {
     return payload;
   }
 
-  /* ---------- health ---------- */
+  /* ---------- health & public config ---------- */
   app.get("/api/health", (_req, res) => res.json({ ok: true, db: mongoose.connection.readyState === 1, ts: Date.now() }));
+  app.get("/api/config", (_req, res) => res.json({ googleClientId: env.GOOGLE_CLIENT_ID || null, mpesa: !!(env.MPESA_CONSUMER_KEY && env.MPESA_CONSUMER_SECRET) }));
+
+  /* ---------- Google sign-in (verifies Google token, issues our JWT) ---------- */
+  const googleClient = env.GOOGLE_CLIENT_ID ? new OAuth2Client(env.GOOGLE_CLIENT_ID) : null;
+  app.post("/api/auth/google", async (req, res) => {
+    try {
+      if (!googleClient) return res.status(501).json({ error: "Google sign-in isn't configured on the server. Set GOOGLE_CLIENT_ID in server/.env." });
+      const { credential } = req.body || {};
+      if (!credential) return res.status(400).json({ error: "Missing Google credential." });
+      const ticket = await googleClient.verifyIdToken({ idToken: credential, audience: env.GOOGLE_CLIENT_ID });
+      const p = ticket.getPayload();
+      if (!p || !p.email) return res.status(401).json({ error: "Could not verify Google account." });
+      const email = p.email.toLowerCase();
+      let user = await User.findOne({ email });
+      if (!user) {
+        user = await User.create({ name: p.name || email.split("@")[0], email, photo: p.picture, role: "user" });
+        await Notification.create({ user: user._id, ico: "verified", title: "Welcome to Esto", body: "Signed in with Google — start exploring verified homes." });
+      } else if (p.picture && !user.photo) { user.photo = p.picture; await user.save(); }
+      res.json({ token: sign(user), user: user.public() });
+    } catch (e) { res.status(401).json({ error: "Google sign-in failed: " + e.message }); }
+  });
 
   /* ---------- auth ---------- */
   app.post("/api/auth/register", async (req, res) => {

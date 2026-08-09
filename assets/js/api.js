@@ -65,8 +65,10 @@
     ready,
     token: getToken, setToken,
     // auth
+    config: () => req("/api/config", { auth: false }),
     register: (name, email, password) => req("/api/auth/register", { method: "POST", auth: false, body: { name, email, password } }),
     login: (email, password) => req("/api/auth/login", { method: "POST", auth: false, body: { email, password } }),
+    googleAuth: (credential) => req("/api/auth/google", { method: "POST", auth: false, body: { credential } }),
     me: () => req("/api/me"),
     updateMe: (patch) => req("/api/me", { method: "PATCH", body: patch }),
     logout: () => { setToken(null); disconnectSocket(); },

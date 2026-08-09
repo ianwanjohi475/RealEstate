@@ -229,7 +229,7 @@
       bar.style.background = pct < 40 ? "var(--danger)" : pct < 80 ? "var(--warn)" : "var(--ok)";
     });
     const gb = $("[data-google]", host);
-    if (gb) gb.addEventListener("click", async () => { try { await A().signInGoogle(); afterAuth(); } catch (e) { alertAuth(e.message); } });
+    if (gb) { gb.addEventListener("click", async () => { try { await A().signInGoogle(); afterAuth(); } catch (e) { alertAuth(e.message); } }); setupGoogleButton(host, gb); }
     const fb = $("[data-forgot]", host);
     if (fb) fb.addEventListener("click", () => alertAuth("Password reset: contact us at " + EMAIL, true));
     const lf = $("[data-login]", host);
@@ -247,6 +247,31 @@
       catch (err) { alertAuth(err.message); btn.disabled = false; btn.textContent = t; }
     });
   }
+  /* ---------- Google Identity Services (real Google sign-in via the API) ---------- */
+  function loadGIS() {
+    if (window.google && window.google.accounts) return Promise.resolve();
+    return new Promise((res, rej) => { const s = document.createElement("script"); s.src = "https://accounts.google.com/gsi/client"; s.async = true; s.onload = res; s.onerror = rej; document.head.appendChild(s); });
+  }
+  async function setupGoogleButton(host, customBtn) {
+    const API = window.EstoAPI;
+    if (!API || !API.available) return;                 // demo/firebase keep the custom button
+    let cfg2; try { cfg2 = await API.config(); } catch (e) { return; }
+    if (!cfg2 || !cfg2.googleClientId) return;          // no Client ID -> custom button explains it
+    try {
+      await loadGIS();
+      if (!window.google || !google.accounts || !google.accounts.id) return;
+      const holder = document.createElement("div");
+      holder.style.cssText = "margin-bottom:10px;display:flex;justify-content:center";
+      customBtn.style.display = "none";
+      customBtn.parentElement.insertBefore(holder, customBtn);
+      google.accounts.id.initialize({
+        client_id: cfg2.googleClientId,
+        callback: async (resp) => { try { await A().signInGoogleCredential(resp.credential); afterAuth(); } catch (e) { alertAuth(e.message); } }
+      });
+      google.accounts.id.renderButton(holder, { theme: currentTheme() === "dark" ? "filled_black" : "outline", size: "large", width: 336, text: "continue_with", shape: "rectangular" });
+    } catch (e) {}
+  }
+
   function openAuth(mode = "login", next) {
     authNext = next || null;
     buildAuthModal(); switchAuth(mode);
@@ -647,7 +672,22 @@
   window.EstoInstall = doInstall;
 
   function initPWA() {
-    if ("serviceWorker" in navigator) window.addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => {}));
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", () => {
+        navigator.serviceWorker.register("sw.js").then((reg) => {
+          // check for an updated worker on every load
+          reg.update().catch(() => {});
+          reg.addEventListener("updatefound", () => {
+            const nw = reg.installing;
+            if (nw) nw.addEventListener("statechange", () => { if (nw.state === "installed" && navigator.serviceWorker.controller) nw.postMessage && nw.postMessage("skip-waiting"); });
+          });
+        }).catch(() => {});
+      });
+      // when an UPDATED worker takes control, reload once so fresh CSS/JS apply
+      const hadController = !!navigator.serviceWorker.controller;
+      let reloaded = false;
+      navigator.serviceWorker.addEventListener("controllerchange", () => { if (!hadController || reloaded) return; reloaded = true; location.reload(); });
+    }
 
     // wire every install affordance (footer, drawer, banner)
     const wire = () => $$("[data-install-app],[data-install]").forEach((b) => { if (b.dataset.bound) return; b.dataset.bound = "1"; b.addEventListener("click", (e) => { e.preventDefault(); doInstall(); }); });
