@@ -133,13 +133,37 @@
         const next = location.pathname.split("/").pop() || "dashboard.html";
         location.replace(redirect + "&next=" + encodeURIComponent(next));
       }};
-      // always allow time for Firebase session restore before redirecting
-      setTimeout(go, 1100);
+      // allow time for session restore before redirecting
+      setTimeout(go, 1200);
     };
     // legacy alias
     window.NyAuth = window.EstoAuth;
   }
 
-  if (CONFIGURED) { wireDemo(false); initFirebase(); }
-  else wireDemo(false);
+  /* ---------------- API (MongoDB backend) MODE ---------------- */
+  const mapApiUser = (u) => u ? { uid: u.id, name: u.name, email: u.email, provider: "password", role: u.role, photo: u.photo || null } : null;
+  function wireAPI() {
+    const API = window.EstoAPI;
+    window.EstoAuth = {
+      mode: "api",
+      currentUser: () => user,
+      onChange(cb) { listeners.add(cb); cb(user); return () => listeners.delete(cb); },
+      async signUp({ name, email, password }) { const r = await API.register(name, email, password); API.setToken(r.token); user = mapApiUser(r.user); emit(); API.connectSocket(); return user; },
+      async signIn({ email, password }) { const r = await API.login(email, password); API.setToken(r.token); user = mapApiUser(r.user); emit(); API.connectSocket(); return user; },
+      async signInGoogle() { throw new Error("Google sign-in isn't enabled on this server — please use email & password."); },
+      async updateName(name) { try { const r = await API.updateMe({ name }); user = mapApiUser(r.user); emit(); } catch (e) {} },
+      async signOutUser() { API.logout(); user = null; emit(); }
+    };
+    attachRequireAuth();
+    // restore session from stored token
+    if (API.token()) API.me().then((r) => { user = mapApiUser(r.user); emit(); API.connectSocket(); }).catch(() => { API.setToken(null); user = null; emit(); });
+  }
+
+  /* ---------------- decide backend: API -> Firebase -> demo ---------------- */
+  wireDemo(false); // instant fallback so the UI always works
+  const decide = (window.EstoAPI && window.EstoAPI.readyPromise) || Promise.resolve(false);
+  decide.then((apiOk) => {
+    if (apiOk) { wireAPI(); return; }
+    if (CONFIGURED) initFirebase();      // only touch Firebase if no backend
+  });
 })();

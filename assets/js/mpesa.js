@@ -85,8 +85,11 @@
     // try the real backend
     if (API_BASE) {
       try {
+        const headers = { "Content-Type": "application/json" };
+        const tk = window.EstoAPI && window.EstoAPI.token && window.EstoAPI.token();
+        if (tk) headers.Authorization = "Bearer " + tk;
         const r = await fetch(API_BASE + "/api/mpesa/stkpush", {
-          method: "POST", headers: { "Content-Type": "application/json" },
+          method: "POST", headers,
           body: JSON.stringify({ phone, amount: cfg.amount, accountRef: cfg.accountRef || "Esto", description: cfg.description || cfg.title })
         });
         const data = await r.json();

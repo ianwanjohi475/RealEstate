@@ -164,7 +164,8 @@ svg{display:block}
 .site-header .bar{display:flex;align-items:center;gap:16px;height:var(--header-h)}
 /* Wordmark logo */
 .brand{display:inline-flex;align-items:baseline;gap:1px;font-family:var(--font-display);font-weight:800;
-  font-size:1.85rem;color:var(--ink);letter-spacing:-.045em;line-height:1;flex:none}
+  font-size:2.15rem;color:var(--ink);letter-spacing:-.045em;line-height:1;flex:none}
+.brand .logo .dot{font-size:1.15em;line-height:0}
 .brand .logo{position:relative;display:inline-block}
 .brand .logo .dot{color:var(--brand);font-weight:800}
 .brand .logo::after{content:"";position:absolute;left:2px;right:9px;bottom:-3px;height:3px;border-radius:3px;
@@ -654,8 +655,8 @@ select option,select optgroup{color:#16121b;background:#ffffff}
 .chart-box{height:240px;display:flex;align-items:flex-end;gap:14px;padding-top:26px}
 .bar{flex:1;background:linear-gradient(var(--brand-400),var(--brand));border-radius:8px 8px 0 0;position:relative;transition:height 1s var(--ease);min-height:6px}
 .bar:hover{filter:brightness(1.1)}
-.bar span{position:absolute;top:-22px;left:0;right:0;text-align:center;font-size:.74rem;font-weight:800;color:var(--ink)}
-.bar small{position:absolute;bottom:-26px;left:0;right:0;text-align:center;font-size:.74rem;color:var(--muted)}
+.chart-box .bar span{position:absolute;top:-22px;left:0;right:0;text-align:center;font-size:.74rem;font-weight:800;color:var(--ink)}
+.chart-box .bar small{position:absolute;bottom:-26px;left:0;right:0;text-align:center;font-size:.74rem;color:var(--muted)}
 .donut{width:170px;height:170px;border-radius:50%;margin:0 auto;position:relative;display:grid;place-items:center}
 .donut::before{content:"";position:absolute;inset:26px;border-radius:50%;background:var(--card)}
 .donut .d-center{position:relative;text-align:center;line-height:1.1}

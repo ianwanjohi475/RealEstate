@@ -56,7 +56,7 @@
               <div class="dropdown__foot"><a href="#" data-tab-link="messages">Open messages</a></div>
             </div>
           </div>
-          <button class="avatar-btn"><span class="avatar" id="dash-avatar">U</span></button>
+          <button class="avatar-btn" id="dash-avatar-btn" title="Profile & settings"><span class="avatar" id="dash-avatar">U</span></button>
         </div>
       </div>
       <div id="dash-content"></div>
@@ -64,6 +64,7 @@
   </div>
 
   <script src="assets/js/firebase-config.js"></script>
+  <script src="assets/js/api.js"></script>
   <script src="assets/js/auth.js"></script>
   <script src="assets/js/data.js"></script>
   <script src="assets/js/icons.js"></script>
@@ -142,7 +143,7 @@
         hy(host);
         $$("[data-thread]",host).forEach(el=>el.addEventListener("click",()=>openThread(el.dataset.thread)));
       }
-      function openThread(id){ activeThread=id; window.EstoChat.markRead(id); const sh=$("#chat-shell"); if(sh) sh.classList.remove("show-list"); renderThreads(); renderChatMain(); }
+      function openThread(id){ activeThread=id; window.EstoChat.markRead(id); const sh=$("#chat-shell"); if(sh) sh.classList.remove("show-list"); renderThreads(); renderChatMain(); updateChatBadge(); }
       function renderChatMain(){
         const host=$("#chat-main"); if(!host) return;
         if(!activeThread){ host.innerHTML=`<div class="chat-empty"><div><div style="width:64px;height:64px;border-radius:18px;background:var(--brand-050);color:var(--brand);display:grid;place-items:center;margin:0 auto 14px">${I("message")}</div><h3>Your conversations</h3><p style="color:var(--muted);margin-top:6px">Select an agent to start chatting in real time.</p></div></div>`; hy(host); return; }
@@ -290,6 +291,7 @@
       async function doLogout(e){if(e)e.preventDefault();await A().signOutUser();location.href="index.html";}
       $("#logout-btn").addEventListener("click",doLogout);
       $("#dash-toggle").addEventListener("click",()=>$("#dash-side").classList.toggle("open"));
+      $("#dash-avatar-btn").addEventListener("click",()=>go("settings"));
       $("#go-premium").addEventListener("click",()=>window.EstoPay.open({amount:1500,title:"Premium plan",description:"Monthly subscription",type:"subscription",accountRef:"Premium",phone:localStorage.getItem("esto:phone"),onSuccess:()=>go("payments")}));
       const dsi=$("#dash-search-input");
       dsi.addEventListener("input",()=>{ const q=dsi.value.toLowerCase(); if((location.hash||"#overview").slice(1)!=="overview")return; const rl=$("#rec-list"); if(!rl)return; const res=D.PROPERTIES.filter(p=>(p.title+" "+p.neighborhood+" "+p.address+" "+p.type).toLowerCase().includes(q)).slice(0,6); rl.innerHTML=res.length?res.map(recRow).join(""):`<p style="color:var(--muted);padding:14px">No matches.</p>`; });

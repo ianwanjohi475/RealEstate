@@ -104,7 +104,44 @@ manifest.webmanifest · sw.js · firebase.json
 - **Contact form / email** posts to the server's `/api/contact` (nodemailer),
   falling back to a success acknowledgement when no backend/SMTP is set.
 
-## Real data — Cloud Firestore
+## Real backend — MongoDB + Socket.io (recommended)
+
+A full Node/Express + **MongoDB** backend lives in [`server/`](server/). It gives you
+**real accounts** (JWT), **live user-to-user chat** over WebSockets (no canned
+replies — a second person logged in as an agent chats back in real time), saved
+homes, viewings, notifications, plus M-Pesa and contact email. You don't have to
+connect me to anything — just point it at your database:
+
+```bash
+cd server
+cp .env.example .env          # then set MONGODB_URI (Atlas) + JWT_SECRET
+npm install
+npm test                      # end-to-end test against an in-memory MongoDB
+npm start                     # http://localhost:5000
+```
+
+Then tell the frontend where the API is (before the other scripts, e.g. in
+`index.html` — or just run the site on `localhost`, which defaults to
+`http://localhost:5000`):
+
+```html
+<script>window.ESTO_API_BASE = "http://localhost:5000";</script>
+```
+
+Once the API + database are up, the app **automatically switches** from demo mode
+to real accounts and live chat (it detects the backend via `/api/health`, which
+only reports ready when MongoDB is actually connected). If the backend is down it
+falls back to the local demo so nothing breaks.
+
+Seeded agent logins (so you can chat live from a second browser): `wanjiru@esto.co.ke`,
+`brian@esto.co.ke`, … password `agent123` (change `AGENT_PASSWORD` in `.env`).
+
+Data model: `users`, `messages`, `notifications`, `saved`, `viewings`, `payments`.
+Chat is delivered in real time via Socket.io and persisted in MongoDB.
+
+---
+
+## Alternative — Cloud Firestore
 
 Chats, notifications and saved homes are stored in **your** Firestore database
 (live, and synced across devices) as soon as a user signs in with Firebase.

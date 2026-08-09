@@ -59,7 +59,7 @@
     const user = A() && A().currentUser();
     const links = NAV.map(([h, l]) => `<a href="${h}" class="${page === h ? "active" : ""}">${l}</a>`).join("");
     const authArea = user
-      ? `<a class="avatar-btn" href="dashboard.html"><span class="avatar">${initials(user)}</span><span class="lbl">${(user.name || "Account").split(" ")[0]}</span></a>`
+      ? `<a class="avatar-btn" href="dashboard.html#settings" title="Your profile"><span class="avatar">${initials(user)}</span><span class="lbl">${(user.name || "Account").split(" ")[0]}</span></a>`
       : `<button class="btn--login" data-open-auth="login">Login</button>`;
 
     host.className = "site-header" + (onHero ? " on-hero" : "");
@@ -297,12 +297,26 @@
     try { const { doc, setDoc, deleteDoc } = fb.fx; const ref = doc(fb.db, `users/${fbUid()}/saved/${id}`);
       if (on) await setDoc(ref, { at: Date.now() }); else await deleteDoc(ref); } catch (e) {}
   }
+  function apiWriteFav(id, on) {
+    const A = window.EstoAPI; if (!A || !A.available || !A.token()) return;
+    (on ? A.addSaved(id) : A.removeSaved(id)).catch(() => {});
+  }
   function toggleFav(id) {
     const f = getFavs(); const i = f.indexOf(id); let on;
     if (i >= 0) { f.splice(i, 1); on = false; toast("Removed from saved homes", "heart"); }
     else { f.push(id); on = true; toast("Saved to your homes", "heart"); }
-    setFavs(f); fsWriteFav(id, on); return f.includes(id);
+    setFavs(f); fsWriteFav(id, on); apiWriteFav(id, on); return f.includes(id);
   }
+  async function pullFavsAPI() {
+    const A = window.EstoAPI; if (!A || !A.available || !A.token()) return;
+    try {
+      const remote = (await A.getSaved()).saved || [];
+      const merged = Array.from(new Set([...getFavs(), ...remote]));
+      merged.filter((id) => !remote.includes(id)).forEach((id) => A.addSaved(id).catch(() => {}));
+      setFavs(merged); document.dispatchEvent(new Event("esto-favs-synced"));
+    } catch (e) {}
+  }
+  window.addEventListener("esto-api-ready", (e) => { if (e.detail && e.detail.available) setTimeout(pullFavsAPI, 400); });
   async function pullFavs(fb) {
     try {
       const { collection, getDocs, doc, setDoc } = fb.fx; const uid = fb.uid();

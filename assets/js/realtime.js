@@ -1,8 +1,8 @@
 /* ============================================================
    ESTO — real-time layer (chat + notifications)
-   Backed by Cloud Firestore when a Firebase user is signed in
-   (data stored in YOUR database, live across devices), with a
-   localStorage + BroadcastChannel fallback for demo/offline.
+   Uses the MongoDB backend (Socket.io realtime + REST) when a
+   user is signed in through the API; otherwise a localStorage +
+   BroadcastChannel fallback so demo/offline still works.
      window.EstoChat   — threads(), messages(), send(), markRead(), onChange(), agents()
      window.EstoNotify — list(), add(), unread(), markAllRead(), onChange()
    ============================================================ */
@@ -10,14 +10,15 @@
   "use strict";
   const D = window.ESTO;
   const now = () => Date.now();
-  const AGENTS = () => (D && D.AGENTS ? D.AGENTS.slice(0, 4) : []);
+  const load = (k, d) => { try { return JSON.parse(localStorage.getItem(k)) ?? d; } catch { return d; } };
+  const save = (k, v) => localStorage.setItem(k, JSON.stringify(v));
 
-  // ---- shared in-memory caches (read synchronously by the UI) ----
   let notifCache = [];
-  let chatCache = {};           // { agentId: [ {from,text,at,seen,_id} ] }
-  let mode = "local";           // "local" | "firestore"
+  let chatCache = {};      // { otherId: [ {from:'me'|'them', text, at, seen} ] }
+  let agentList = [];      // [ {id,name,title,photo,role} ]
+  let mode = "local";      // "local" | "api"
+  let myId = null;
 
-  // ---- change buses (support cross-tab sync in local mode) ----
   const bc = ("BroadcastChannel" in window) ? new BroadcastChannel("esto-rt") : null;
   function makeBus(tag) {
     const subs = new Set();
@@ -38,14 +39,11 @@
     "You can pay the small reservation fee via M-Pesa to hold it."
   ];
   const reply = () => REPLIES[Math.floor(Math.random() * REPLIES.length)];
+  // map API agent -> nice photo from local data by matching first name
+  function agentPhoto(name) { const a = (D.AGENTS || []).find((x) => x.name === name || x.name.split(" ")[0] === (name || "").split(" ")[0]); return a ? a.photo : ""; }
 
-  /* =====================================================
-     LOCAL backend (default)
-     ===================================================== */
+  /* ===================== LOCAL backend ===================== */
   const NKEY = "esto:notifs", CKEY = "esto:chat";
-  const load = (k, d) => { try { return JSON.parse(localStorage.getItem(k)) ?? d; } catch { return d; } };
-  const save = (k, v) => localStorage.setItem(k, JSON.stringify(v));
-
   function localSeed() {
     if (!load(NKEY, null)) save(NKEY, [
       { id: "n1", ico: "verified", title: "New verified listing", body: "Sky Villa Penthouse in Kilimani · TrustScore 94", at: now() - 2 * 36e5, read: false },
@@ -53,7 +51,7 @@
       { id: "n3", ico: "message", title: "Wanjiru replied", body: "Happy to arrange that viewing.", at: now() - 26 * 36e5, read: true }
     ]);
     if (!load(CKEY, null)) {
-      const first = AGENTS()[0]; const seed = {};
+      const first = (D.AGENTS || [])[0]; const seed = {};
       if (first) seed[first.id] = [
         { from: "them", text: "Hi! Thanks for your interest in the Karen villa — happy to help.", at: now() - 3 * 36e5, seen: false },
         { from: "them", text: "Would a Saturday viewing at 10am work for you?", at: now() - 3 * 36e5 + 60000, seen: false }
@@ -61,8 +59,7 @@
       save(CKEY, seed);
     }
   }
-  function localRefresh() { notifCache = load(NKEY, []); chatCache = load(CKEY, {}); }
-
+  function localRefresh() { if (mode === "local") { notifCache = load(NKEY, []); chatCache = load(CKEY, {}); agentList = (D.AGENTS || []).slice(0, 4); } }
   const local = {
     addNotif(n) { const a = load(NKEY, []); a.unshift(Object.assign({ id: "n_" + now(), at: now(), read: false, ico: "bell" }, n)); save(NKEY, a.slice(0, 40)); localRefresh(); nBus.ping(); },
     markAllRead() { save(NKEY, load(NKEY, []).map((n) => ({ ...n, read: true }))); localRefresh(); nBus.ping(); },
@@ -76,79 +73,60 @@
       }, 1400 + Math.random() * 1800);
     }
   };
-  // keep caches live when localStorage changes in another tab
   nBus.subs.add(localRefresh); cBus.subs.add(localRefresh);
   localSeed(); localRefresh();
 
-  /* =====================================================
-     FIRESTORE backend (when signed in with Firebase)
-     ===================================================== */
-  let fb = null, uid = null, unsubN = null, unsubM = null, seededN = false, seededM = false;
-  function fsPaths() {
-    const { collection } = fb.fx; const db = fb.db;
-    return {
-      notifs: collection(db, `users/${uid}/notifications`),
-      msgs: collection(db, `users/${uid}/messages`)
-    };
-  }
-  async function fsSeed() {
-    const { addDoc } = fb.fx; const P = fsPaths(); const first = AGENTS()[0];
-    try {
-      if (!seededN) { seededN = true;
-        await addDoc(P.notifs, { ico: "verified", title: "Welcome to Esto", body: "Your account is ready — start exploring verified homes.", at: now(), read: false });
-      }
-      if (!seededM && first) { seededM = true;
-        await addDoc(P.msgs, { threadId: first.id, from: "them", text: "Hi! I'm " + first.name.split(" ")[0] + ". Happy to help you find a verified home — what are you looking for?", at: now(), seen: false });
-      }
-    } catch (e) { /* rules may block until enabled */ }
-  }
-  function activateFirestore(_fb) {
-    const u = _fb && _fb.uid && _fb.uid();
-    if (!u) return;                 // no signed-in user yet
-    if (mode === "firestore" && uid === u) return;
-    fb = _fb; uid = u; mode = "firestore";
-    // drop local cross-tab mirroring; Firestore is source of truth
+  /* ===================== API backend (MongoDB) ===================== */
+  const API = () => window.EstoAPI;
+  async function activateAPI() {
+    if (mode === "api") return;
+    if (!API() || !API().available || !API().token()) return;
+    const u = window.EstoAuth && window.EstoAuth.currentUser && window.EstoAuth.currentUser();
+    if (!u) return;
+    myId = u.uid; mode = "api";
     nBus.subs.delete(localRefresh); cBus.subs.delete(localRefresh);
-    if (unsubN) unsubN(); if (unsubM) unsubM();
-    const { query, orderBy, onSnapshot } = fb.fx; const P = fsPaths();
     try {
-      unsubN = onSnapshot(query(P.notifs, orderBy("at", "desc")), (snap) => {
-        notifCache = snap.docs.map((d) => Object.assign({ _id: d.id }, d.data()));
-        if (snap.empty) fsSeed(); nBus.emit();
-      }, () => {});
-      unsubM = onSnapshot(query(P.msgs, orderBy("at", "asc")), (snap) => {
-        const c = {}; snap.forEach((d) => { const m = Object.assign({ _id: d.id }, d.data()); (c[m.threadId] = c[m.threadId] || []).push(m); });
-        chatCache = c; if (snap.empty) fsSeed(); cBus.emit();
-      }, () => {});
-    } catch (e) { mode = "local"; }
+      const { agents } = await API().agents();
+      agentList = agents.map((a) => ({ id: a.id, name: a.name, title: a.title, photo: a.photo || agentPhoto(a.name), role: "agent" }));
+      cBus.emit();
+    } catch (e) {}
+    try { notifCache = (await API().getNotifications()).notifications.map((n) => ({ id: n._id, ico: n.ico, title: n.title, body: n.body, at: new Date(n.at).getTime(), read: n.read })); nBus.emit(); } catch (e) {}
+    try {
+      const { threads } = await API().getThreads();
+      threads.forEach((t) => { chatCache[t.user.id] = chatCache[t.user.id] || []; });
+      cBus.emit();
+    } catch (e) {}
+    await API().connectSocket();
+    API().onMessage((m) => {
+      const other = String(m.from) === String(myId) ? String(m.to) : String(m.from);
+      chatCache[other] = chatCache[other] || [];
+      chatCache[other].push({ _id: m.id, from: String(m.from) === String(myId) ? "me" : "them", text: m.text, at: new Date(m.at).getTime(), seen: String(m.from) === String(myId) });
+      cBus.emit();
+    });
+    API().onNotification((n) => { notifCache.unshift({ id: n.id, ico: n.ico, title: n.title, body: n.body, at: new Date(n.at).getTime(), read: false }); nBus.emit(); });
   }
-  const fsBackend = {
-    async addNotif(n) { try { const { addDoc } = fb.fx; await addDoc(fsPaths().notifs, Object.assign({ at: now(), read: false, ico: "bell" }, n)); } catch (e) {} },
-    async markAllRead() { try { const { writeBatch, doc } = fb.fx; const b = writeBatch(fb.db); notifCache.forEach((n) => { if (!n.read) b.update(doc(fb.db, `users/${uid}/notifications/${n._id}`), { read: true }); }); await b.commit(); } catch (e) {} },
-    async markChatRead(id) { try { const { writeBatch, doc } = fb.fx; const b = writeBatch(fb.db); (chatCache[id] || []).forEach((m) => { if (m.from === "them" && !m.seen) b.update(doc(fb.db, `users/${uid}/messages/${m._id}`), { seen: true }); }); await b.commit(); } catch (e) {} },
+  const apiBackend = {
+    async addNotif() {},   // server-generated
+    async markAllRead() { try { await API().readAllNotifications(); notifCache = notifCache.map((n) => ({ ...n, read: true })); nBus.emit(); } catch (e) {} },
+    async markChatRead(id) {
+      try { const { messages } = await API().getMessages(id);
+        chatCache[id] = messages.map((m) => ({ _id: m.id, from: m.mine ? "me" : "them", text: m.text, at: new Date(m.at).getTime(), seen: true }));
+        cBus.emit();
+      } catch (e) {}
+    },
     async send(id, text) {
-      const { addDoc } = fb.fx; const P = fsPaths();
-      try { await addDoc(P.msgs, { threadId: id, from: "me", text, at: now(), seen: true }); } catch (e) { return; }
-      setTimeout(async () => {
-        try {
-          await addDoc(P.msgs, { threadId: id, from: "them", text: reply(), at: now(), seen: false });
-          const ag = (D.AGENTS || []).find((a) => a.id === id);
-          await addDoc(P.notifs, { ico: "message", title: (ag ? ag.name.split(" ")[0] : "Agent") + " replied", body: "New message in your chat", at: now(), read: false });
-        } catch (e) {}
-      }, 1400 + Math.random() * 1800);
+      // realtime via socket (server echoes to sender); fall back to REST
+      if (API().socketSend && window.io) API().socketSend(id, text);
+      else { try { await API().sendMessage(id, text); await this.markChatRead(id); } catch (e) {} }
     }
   };
 
-  const be = () => (mode === "firestore" ? fsBackend : local);
+  const be = () => (mode === "api" ? apiBackend : local);
+  window.addEventListener("esto-api-ready", () => activateAPI());
+  if (window.EstoAuth && window.EstoAuth.onChange) window.EstoAuth.onChange(() => activateAPI());
+  setTimeout(activateAPI, 500);
 
-  // Hook up Firebase readiness + auth changes
-  window.addEventListener("esto-fb-ready", (e) => activateFirestore(e.detail));
-  if (window.EstoFB) activateFirestore(window.EstoFB);
-  if (window.EstoAuth && window.EstoAuth.onChange) window.EstoAuth.onChange(() => { if (window.EstoFB) activateFirestore(window.EstoFB); });
-
-  /* =====================================================
-     PUBLIC API (identical for both backends)
-     ===================================================== */
+  /* ===================== PUBLIC API ===================== */
   window.EstoNotify = {
     list: () => notifCache,
     unread: () => notifCache.filter((n) => !n.read).length,
@@ -157,7 +135,7 @@
     onChange(cb) { nBus.subs.add(cb); return () => nBus.subs.delete(cb); }
   };
   window.EstoChat = {
-    agents: () => AGENTS(),
+    agents: () => (mode === "api" ? agentList : (D.AGENTS || []).slice(0, 4)),
     threads() {
       return this.agents().map((a) => {
         const msgs = chatCache[a.id] || [];
