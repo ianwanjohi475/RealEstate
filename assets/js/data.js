@@ -10,6 +10,8 @@
   const sized = (url, w) => url.replace(/([?&]w=)\d+/i, "$1" + w);
   const px = (id) => `https://images.pexels.com/photos/${id}/pexels-photo-${id}.jpeg?auto=compress&cs=tinysrgb&w=1200`;
   const un = (id) => `https://images.unsplash.com/photo-${id}?auto=format&fit=crop&w=1200&q=70`;
+  // self-hosted African avatars (work offline in the PWA, no external CDN)
+  const av = (slug) => `assets/img/avatars/${slug}.svg`;
 
   const trust = (title, inspection, price, agent) => {
     const overall = Math.round((title + inspection + price + agent) / 4);
@@ -18,22 +20,22 @@
 
   const AGENTS = [
     { id:"wanjiru-kamau", name:"Wanjiru Kamau", role:"Principal Agent · Karen & Runda",
-      photo: px(3777931), license:"EARB/2019/04127", phone:"0758950370", email:"ianwanjohi475@gmail.com",
+      photo: av("wanjiru-kamau"), license:"EARB/2019/04127", phone:"0758950370", email:"ianwanjohi475@gmail.com",
       sales:128, years:11, rating:4.9, bio:"Wanjiru leads our leafy-suburbs desk and has closed over KES 6.4B in verified transactions across Karen, Runda and Kitisuru." },
     { id:"brian-otieno", name:"Brian Otieno", role:"Senior Agent · Westlands & Riverside",
-      photo: px(2379005), license:"EARB/2020/07731", phone:"0758950370", email:"ianwanjohi475@gmail.com",
+      photo: av("brian-otieno"), license:"EARB/2020/07731", phone:"0758950370", email:"ianwanjohi475@gmail.com",
       sales:96, years:8, rating:4.8, bio:"Brian specialises in serviced apartments and mixed-use investment stock along the Westlands–Riverside corridor." },
     { id:"aisha-mohamed", name:"Aisha Mohamed", role:"Lettings Lead · Kilimani & Kileleshwa",
-      photo: px(1181686), license:"EARB/2021/09904", phone:"0758950370", email:"ianwanjohi475@gmail.com",
+      photo: av("aisha-mohamed"), license:"EARB/2021/09904", phone:"0758950370", email:"ianwanjohi475@gmail.com",
       sales:74, years:6, rating:5.0, bio:"Aisha runs our lettings book and personally verifies every managed unit before it reaches a tenant." },
     { id:"david-mwangi", name:"David Mwangi", role:"Land & New Homes · Kiambu Road",
-      photo: px(614810), license:"EARB/2018/03318", phone:"0758950370", email:"ianwanjohi475@gmail.com",
+      photo: av("david-mwangi"), license:"EARB/2018/03318", phone:"0758950370", email:"ianwanjohi475@gmail.com",
       sales:141, years:13, rating:4.9, bio:"David advises on titled land and off-plan developments along Kiambu Road, Ruaka and Tigoni." },
     { id:"grace-njeri", name:"Grace Njeri", role:"Buyer's Advisor · Lavington",
-      photo: px(733872), license:"EARB/2022/11288", phone:"0758950370", email:"ianwanjohi475@gmail.com",
+      photo: av("grace-njeri"), license:"EARB/2022/11288", phone:"0758950370", email:"ianwanjohi475@gmail.com",
       sales:58, years:5, rating:4.9, bio:"Grace guides first-time buyers through financing, due-diligence and closing with total transparency." },
     { id:"samuel-kiptoo", name:"Samuel Kiptoo", role:"Commercial & Investment",
-      photo: px(697509), license:"EARB/2017/02201", phone:"0758950370", email:"ianwanjohi475@gmail.com",
+      photo: av("samuel-kiptoo"), license:"EARB/2017/02201", phone:"0758950370", email:"ianwanjohi475@gmail.com",
       sales:83, years:14, rating:4.7, bio:"Samuel structures yield-focused portfolios for diaspora and institutional investors." }
   ];
   const agentBy = (id) => AGENTS.find((a) => a.id === id) || AGENTS[0];
@@ -146,11 +148,11 @@
   ];
 
   const TESTIMONIALS = [
-    { name:"Janet Wambui", role:"Bought in Lavington", photo:px(1130626), stars:5,
+    { name:"Janet Wambui", role:"Bought in Lavington", photo:av("janet-wambui"), stars:5,
       quote:"The Esto TrustScore told me the title, the inspection and the price were all checked before I flew in from Dubai. Zero surprises on closing day." },
-    { name:"Peter Ochieng", role:"Sold in Kilimani", photo:px(220453), stars:5,
+    { name:"Peter Ochieng", role:"Sold in Kilimani", photo:av("peter-ochieng"), stars:5,
       quote:"They photographed, staged and had a verified buyer in three weeks. The transparent, all-in fee schedule meant no awkward broker games." },
-    { name:"Fatuma Hassan", role:"Renting in Westlands", photo:px(774909), stars:5,
+    { name:"Fatuma Hassan", role:"Renting in Westlands", photo:av("fatuma-hassan"), stars:5,
       quote:"Every listing I viewed actually existed and matched the photos. After months of ghost adverts elsewhere, that alone won me over." }
   ];
 

@@ -240,7 +240,8 @@ svg{display:block}
 .mobile-drawer{position:fixed;inset:0;z-index:120;visibility:hidden;pointer-events:none}
 .mobile-drawer .scrim{position:absolute;inset:0;background:rgba(10,6,14,.55);opacity:0;transition:.3s}
 .mobile-drawer .panel{position:absolute;top:0;right:0;height:100%;width:min(86vw,360px);background:var(--bg);
-  box-shadow:var(--shadow-lg);transform:translateX(100%);transition:.35s var(--ease);padding:24px;display:flex;flex-direction:column;gap:6px}
+  box-shadow:var(--shadow-lg);transform:translateX(100%);transition:.35s var(--ease);padding:24px;display:flex;flex-direction:column;gap:6px;
+  overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
 .mobile-drawer.open{visibility:visible;pointer-events:auto}
 .mobile-drawer.open .scrim{opacity:1}
 .mobile-drawer.open .panel{transform:none}
