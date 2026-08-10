@@ -15,6 +15,15 @@
   const listeners = new Set();
   let user = null;
   const emit = () => listeners.forEach((cb) => { try { cb(user); } catch (e) {} });
+  // Resolves once the active backend has FINISHED its first session-restore
+  // attempt. requireAuth waits for this instead of a blind timeout, so a slow
+  // mobile restore (Firebase SDK load + redirect result) can't bounce a
+  // signed-in user back home.
+  let markAuthReady; const authReady = new Promise((r) => { markAuthReady = r; });
+  let authReadyDone = false; const settleAuth = () => { if (!authReadyDone) { authReadyDone = true; markAuthReady(); } };
+  // Safety net: if the SDK never loads (offline / blocked), still let the
+  // guard decide eventually. Real Firebase restore finishes well inside this.
+  setTimeout(settleAuth, 6000);
   const normalize = (u, extra = {}) => u ? {
     uid: u.uid,
     name: u.displayName || extra.name || (u.email ? u.email.split("@")[0] : "User"),
@@ -81,8 +90,13 @@
           GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult,
           updateProfile, signOut, setPersistence, browserLocalPersistence } = authMod;
         setPersistence(auth, browserLocalPersistence).catch(() => {});
+        // Don't declare auth "ready" until BOTH the first auth-state event and
+        // the redirect result have resolved — otherwise a signed-in user
+        // restored from persistence (or a mobile redirect) could be missed.
+        let sawAuthEvent = false, redirectDone = false;
+        const maybeReady = () => { if (sawAuthEvent && redirectDone) settleAuth(); };
         // complete any pending Google redirect sign-in
-        getRedirectResult(auth).then((r) => { if (r && r.user) { user = normalize(r.user); emit(); } }).catch(() => {});
+        getRedirectResult(auth).then((r) => { if (r && r.user) { user = normalize(r.user); emit(); } }).catch(() => {}).finally(() => { redirectDone = true; maybeReady(); });
         const map = {
           "auth/email-already-in-use":"An account with that email already exists.",
           "auth/invalid-email":"That email address looks invalid.",
@@ -98,7 +112,7 @@
           "auth/network-request-failed":"Network error — check your connection and retry."
         };
         const nice = (e) => new Error(map[e.code] || e.message || "Something went wrong.");
-        onAuthStateChanged(auth, (u) => { user = normalize(u); emit(); });
+        onAuthStateChanged(auth, (u) => { user = normalize(u); emit(); sawAuthEvent = true; maybeReady(); });
         window.EstoAuth = {
           mode: "firebase",
           currentUser: () => user,
@@ -124,17 +138,23 @@
         };
         attachRequireAuth();
       })
-      .catch(() => wireDemo(true));
+      .catch(() => { wireDemo(true); settleAuth(); });
   }
 
   function attachRequireAuth() {
     window.EstoAuth.requireAuth = function (redirect = "index.html?auth=login") {
-      const go = () => { if (!window.EstoAuth.currentUser()) {
+      // Already signed in — nothing to guard.
+      if (window.EstoAuth.currentUser()) return;
+      let settled = false;
+      // If a user appears while we wait (session restore / redirect result),
+      // cancel the pending redirect and stay on the page.
+      const unsub = window.EstoAuth.onChange((u) => { if (u) { settled = true; if (unsub) unsub(); } });
+      // Only decide AFTER the backend has attempted to restore the session.
+      authReady.then(() => setTimeout(() => {
+        if (settled || window.EstoAuth.currentUser()) return;
         const next = location.pathname.split("/").pop() || "dashboard.html";
         location.replace(redirect + "&next=" + encodeURIComponent(next));
-      }};
-      // allow time for session restore before redirecting
-      setTimeout(go, 1200);
+      }, 200));
     };
     // legacy alias
     window.NyAuth = window.EstoAuth;
@@ -158,7 +178,8 @@
     };
     attachRequireAuth();
     // restore session from stored token
-    if (API.token()) API.me().then((r) => { user = mapApiUser(r.user); emit(); API.connectSocket(); }).catch(() => { API.setToken(null); user = null; emit(); });
+    if (API.token()) API.me().then((r) => { user = mapApiUser(r.user); emit(); API.connectSocket(); }).catch(() => { API.setToken(null); user = null; emit(); }).finally(settleAuth);
+    else settleAuth();
   }
 
   /* ---------------- decide backend: API -> Firebase -> demo ---------------- */
@@ -167,5 +188,6 @@
   decide.then((apiOk) => {
     if (apiOk) { wireAPI(); return; }
     if (CONFIGURED) initFirebase();      // only touch Firebase if no backend
+    else settleAuth();                   // pure demo — nothing async to restore
   });
 })();

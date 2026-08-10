@@ -4,7 +4,7 @@
    immediately; cache-first only for icons; stale-while-
    revalidate for remote images. Never touches Firebase/maps.
    ============================================================ */
-const VERSION = "esto-v3.3.0";
+const VERSION = "esto-v3.4.0";
 const CODE = `${VERSION}-code`;
 const IMG = `${VERSION}-img`;
 const PRECACHE = ["index.html", "assets/css/styles.css", "assets/js/main.js", "manifest.webmanifest"];
